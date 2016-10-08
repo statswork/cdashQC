@@ -1,0 +1,160 @@
+testnum,lb_testc,ttl,colwide
+,,,
+,9 CRTCLG,Estimated~Creatinine~Clearance,
+,9 CRTCLG,eGFR,
+10,AG,Albumin/~Globulin,5
+11,ALB,Albumin,4
+23,ALP,Alkaline~Phosphatase,8
+24,ALT,Alanine~Amino-~transferase,8
+401,AMP,Amphet-~amines,4
+402,AMPH,Amphetamines,9
+99,AMY,Amylase,7
+201,APPEAR,Appearance,7
+25,AST,Aspartate~Amino-~transferase,8
+124,BAND,Bands,3
+405,BARB,Barbiturates,9
+126,BASOA,Absolute~Basophils,6
+125,BASOP,Basophils,6
+13,BC,BUN/~Creatinine,7
+137,BLDTM,Bleeding~Time,5
+2,CA,Calcium,4
+407,CAFF,Caffeine,5
+137,CATT,Ca-Thrombin~Time,8
+138,CFX,Chromogenic~Factor X,8
+38,CHOL,Cholesterol,8
+41,CK,Creatine~Kinase,5
+3,CL,Chloride,5
+5,CO2,Bicarbonate,8
+411,COC,Cocaine,4
+202,COLOR,Color,3
+413,COT,Cotinine,5
+42,CPK,Creatine~Phosphokinase,10
+14,CREAT,Creatinine,7
+28,DBIL,Direct~Bilirubin,6
+128,EOSA,Absolute~Eosinophils,8
+127,EOSP,Eosinophils,8
+119,ESR,Sedimentation~Rate,10
+999,EST,17B~Estradiol,6
+415,ETOH,Ethanol~(Urine),4
+32,FE,Iron,3
+141,FIBR,Fibrinogen,7
+999,FII,Factor II,6
+999,FIX,Factor IX,6
+1,FOB,Occult~Blood,3
+999,FSH1,FSH,3
+999,FVII,Factor VII,7
+139,FX,Factor X,5
+999,G6PD,Glucose-6-phosphate~Dehydrogenase,16
+31,GGT,GGT,3
+20,GLOB,Globulin,5
+15,GLU,Glucose,4
+403,HAMP,Amphetamines,9
+403,HAMPC,Amphetamines,9
+999,HAPT,Haptoglobin,8
+404,HBARB,Barbiturates,9
+404,HBARBC,Barbiturates,9
+406,HBENZ,Benzodiazepines,12
+406,HBENZC,Benzodiazepines,12
+999,HBS,HepatitisBs~Antigen,8
+999,HBSAG,HepatitisBs~Antigen,8
+3,HCGQ,"Beta HCG,~Quantitative",10
+2,HCGS,"Pregnancy,~Serum",7
+412,HCOC,Cocaine,4
+412,HCOCC,Cocaine,
+414,HCOTC,Cotinine~(Urine),5
+103,HCT,Hematocrit,7
+104,HCTM,Hemat-~ocrit,6
+999,HCV,HepatitisC~Antibody,7
+39,HDL,HDL~Cholesterol,8
+999,HEPC,HepatitisC~Antibody,7
+416,HETOH,Ethanol~(Urine),4
+416,HETOHC,Ethanol~(Urine),4
+101,HGB,Hemoglobin,7
+102,HGBM,Hemo-~globin,6
+418,HOPI,Opiates,4
+418,HOPIC,Opiates,4
+419,HPCP,Phencyclidine,10
+408,HTHC,Cannabinoids,9
+408,HTHCC,Cannabinoids,9
+29,IBIL,Indirect~Bilirubin,6
+142,INR,Prothrombin~Time/INR,8
+8,IPHOS,Phosphorus,7
+7,K,Potassium,6
+45,LD,Lactate~Dehydrogenase,10
+999,LD1,Isoenzyme~(LD1),6
+40,LDL,LDL~Cholesterol,8
+98,LIPS,Lipase,12
+130,LYMPA,Absolute~Lymphocytes,8
+129,LYMPP,Lymphocytes,8
+901,MALB,Microalbumin,12
+112,MCH,MCH,3
+114,MCHC,MCHC,3
+113,MCHCM,MCHC,3
+111,MCHM,MCH,3
+116,MCV,MCV,3
+115,MCVM,MCV,3
+6,MG,Magnesium,6
+132,MONOA,Absolute~Monocytes,6
+131,MONOP,Monocytes,6
+9,NA,Sodium,3
+134,NEUTA,Absolute~Neutrophils,8
+133,NEUTP,Neutrophils,8
+417,OPI,Opiates,4
+999,OSMS,Serum~Osmolality,7
+999,OSMU,Urinary~Osmolality,7
+145,PAT1,ADP-Induced~Platelet~Aggregation,8
+146,PAT6,ADP-Induced~Platelet~Aggregation,8
+420,PCP,Phencyclidine,10
+105,PLT,Platelet~Count,5
+107,PLTEST,Platelet~Estimate,5
+106,PLTM,Platelet~Count,5
+108,PMOR,Platelet~Morphology,7
+999,PROS,Protein S,6
+150,PROTC,Protein C,6
+151,PT,Prothrombin~Time,8
+155,PTT,Partial~Thromboplastin~Time,11
+109,RBC,Red Blood~Cell Count,7
+110,RBCM,RBC,3
+118,RETIC,Reticulocyte,9
+119,RMOR,RBC~Morphology,7
+210,SG,Specific~Gravity,5
+999,SHGB,Serum~Hemoglobin,7
+999,SPTP,P&P,3
+30,TBIL,Total~Bilirubin,6
+409,THC,Cannabinoids,9
+410,THC100,Canna-~binoids,7
+18,TP,Total~Protein,4
+46,TRIG,Triglycerides,8
+999,TSH,TSH,3
+157,TT,Thrombin~Time,5
+251,UBACT,Bacteria,5
+221,UBIL,Bilirubin,6
+203,UBLD,Blood,3
+222,UCA,"Calcium,~Urine",5
+252,UCAST,Casts,3
+224,UCL,"Chloride,~Urine",6
+414,UCOT,Cotinine,5
+226,UCRT,"Creatinine,~Urine",8
+253,UCRYS,Crystals,5
+206,UEPI,Epithelials,8
+214,UGLU,Glucose,4
+999,UHGB,Urinary~Hemoglobin,7
+229,UIPHOS,"Inorganic~Phosphorous,~Urine",9
+231,UK,"Potassium, Urine",13
+215,UKET,Ketones,4
+216,ULEU,Leukocyte~Esterase,6
+254,UMUC,Mucus,3
+233,UNA,"Sodium, Urine",10
+217,UNIT,Nitrite,4
+209,UPH,"pH, Urine",6
+218,UPRO,Protein,4
+255,URBC,RBC,3
+12,UREA,Blood~Urea~Nitrogen,5
+19,URIC,Uric~Acid,4
+999,UTPR,"Urinary Total~Protein, Random",12
+240,UURO,Urobilinogen,9
+256,UWBC,WBC,3
+120,WBC,White Blood~Cell Count,8
+121,WBCM,WBC,3
+122,WMOR,WBC~Morphology,7
+999,XHBS,HepatitisBs~Antigen,8

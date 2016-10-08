@@ -1,0 +1,12 @@
+library(devtools)
+library(roxygen2)
+library(dplyr)
+# create("cdashQC")
+setwd("C:/Users/zhuob01/Documents/cdashQC-master")
+# 
+# devtools::use_data(CODES, internal = T)
+document()
+check()
+build(manual = T)
+setwd("..")
+install("cdashQC")
