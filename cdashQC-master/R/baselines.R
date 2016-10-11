@@ -68,7 +68,7 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
           arrange(CLIENTID, PERIOD, TEST_CODE, DAY, HOUR) %>%  # sort the related variables
           group_by(CLIENTID, PERIOD, TEST_CODE) %>%                
           slice(n())   %>%                                     # the hour of last observation will correspond to baseline hour
-          select(CLIENTID, PERIOD, TEST_CODE, PHOUR, DAY, HOUR)  %>%
+          select(CLIENTID, PERIOD, TEST_CODE, PHOUR)  %>%
           mutate(status= "BASELINE")
          
   # find test categories that have NA (PERIOD = SCREEN) as baseline
@@ -77,14 +77,14 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
           arrange(CLIENTID, PERIOD, TEST_CODE, DAY, HOUR) %>%  # sort the related variables
           group_by(CLIENTID, PERIOD, TEST_CODE) %>%                
           slice(n())   %>%                                     # the hour of last observation will correspond to baseline hour
-          select(CLIENTID, PERIOD, TEST_CODE, PHOUR, DAY, HOUR)  %>%
+          select(CLIENTID, PERIOD, TEST_CODE, PHOUR)  %>%
           mutate(status= "BASELINE")
         
   baseline_hour <- bind_rows(baseline1, baseline2)
   temp_name <- which(names(baseline_hour) == "TEST_CODE")
   names(baseline_hour)[temp_name] <- complete_identifier  # change the code name to its original name
   
-  dat <- baseline_hour %>% ungroup() %>% arrange(CLIENTID, PERIOD, DAY, HOUR)
+  dat <- baseline_hour %>% ungroup() %>% arrange(CLIENTID, PERIOD, PHOUR)
   return(dat)
 }
 
@@ -104,7 +104,7 @@ create_baseline <- function(data, var_identifier = "_TEST"){
   
   # find the baseline hours for each test category
   basehour <- find_base_phour(data, var_identifier)
-  var_sort <- names(basehour)[!names(basehour) %in% c("status")]
+  var_sort <- names(basehour)[!names(basehour) %in% c("status")]  # sort by these variables
   
   # merge to the original data to create an extra column showing whether it's baseline or not.
   data1 <- left_join(data %>% arrange_(.dots = var_sort), 
@@ -113,9 +113,11 @@ create_baseline <- function(data, var_identifier = "_TEST"){
   
   id1 <- is.na(data1$status) & (is.na(data1$HOUR) | data1$HOUR < 0)
   id2 <- is.na(data1$status) & ( data1$HOUR >= 0)
+  id3 <- toupper(trimws(data1$PERIOD)) == "SCREEN"
   
   data1$status[id1] <- "PREDOSE (NOT BASELINE)"
   data1$status[id2] <- "POSTDOSE"
+  data1$status[id3] <- "SCREEN"
   
   return(data1)
 }

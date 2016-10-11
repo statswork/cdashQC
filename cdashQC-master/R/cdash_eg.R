@@ -16,19 +16,19 @@ create_eg <- function(eg){
   
    # do the transpose
    eg_value <- eg %>% filter(trimws(EG_TEST) != "OVERALL INTERPRETATION") %>%
-     select(CLIENTID, DAY, HOUR, EG_TEST, EG_ORRES, EG_DAT, EG_TIM, PERIOD) %>% # choose columns
+     select(CLIENTID, PERIOD, PHOUR, DAY, HOUR, EG_TEST, EG_ORRES, EG_DAT, EG_TIM) %>% # choose columns
      mutate(EG_ORRES = as.numeric(EG_ORRES)) %>%   # charactor to numerical
-     dcast(CLIENTID + PERIOD +  DAY + HOUR + EG_DAT + EG_TIM ~ EG_TEST, value.var = "EG_ORRES") %>% # transpose
-     arrange(CLIENTID, DAY, HOUR, EG_DAT, EG_TIM)  # sort them 
+     dcast(CLIENTID + PERIOD + PHOUR +  DAY + HOUR + EG_DAT + EG_TIM ~ EG_TEST, value.var = "EG_ORRES") %>% # transpose
+     arrange(CLIENTID, PHOUR, DAY, HOUR, EG_DAT, EG_TIM)  # sort them 
    
    # get the specifications
    eg_spec <- eg %>% filter(trimws(EG_TEST) ==  "OVERALL INTERPRETATION") %>%
-          select(CLIENTID,  DAY, HOUR, EG_DAT, EG_TIM, EG_ORR_D, EG_SPEC) %>%
-          arrange(CLIENTID, DAY, HOUR, EG_DAT, EG_TIM)
+          select(CLIENTID, PHOUR,  DAY, HOUR, EG_DAT, EG_TIM, EG_ORR_D, EG_SPEC) %>%
+          arrange(CLIENTID, PHOUR, DAY, HOUR, EG_DAT, EG_TIM)
   
     eg1 <- inner_join(eg_value, eg_spec, 
-              by = c("CLIENTID", "EG_DAT", "EG_TIM", "HOUR", "DAY") ) %>%
-            arrange(CLIENTID, EG_DAT, EG_TIM, HOUR, DAY) %>% 
+              by = c("CLIENTID", "PHOUR", "EG_DAT", "EG_TIM", "HOUR", "DAY") ) %>%
+            arrange(CLIENTID, PHOUR,  EG_DAT, EG_TIM, HOUR, DAY) %>% 
             mutate(egdate = parse_date_time(paste(ymd(EG_DAT), seconds_to_period(EG_TIM)), "Ymd HMS", truncated= 3),
                    HOUR = round(HOUR, 2))
       
@@ -44,7 +44,7 @@ create_eg <- function(eg){
 #' get the replicates for each protocol hour (PHOUR)
 #' 
 #' @title get the replicates for eg data.
-#' @param eg1  the dataset created by \code{create_eg}
+#' @param eg
 #' @param reps  how many replicates will be measured for each protocol hour. 
 #' @param isBase Is this for finding baseline? Default set to be \code{TRUE}.
 #' @return  a list 
@@ -54,44 +54,39 @@ create_eg <- function(eg){
 #' @seealso \code{\link{create_eg}}
 #' 
 
-replicate_eg <- function(eg1, reps= 3, isBase = T){
-  
-  # choose the baseline PHOUR
-  if (isBase){
-    choose_hour <- eg1 %>% filter(DAY == 1 & HOUR < 0) %>%   # get the baseline hours
-      select(CLIENTID, PERIOD, PHOUR, DAY, HOUR) %>%
-      arrange(CLIENTID, PERIOD, DAY) %>% 
-      group_by(CLIENTID,PERIOD, DAY) %>%
-      slice(n() ) %>%                # select the last measurements
-      ungroup()   %>% select(-DAY, -HOUR)
+replicate_eg <- function(eg, reps= 3){
     
-  }
-  else { # choose the postdose PHOUR
-    choose_hour <- eg1 %>% filter( HOUR >= 0) %>%   # these are the postdose measurements
-      select(CLIENTID, PERIOD,  PHOUR) %>%
-      arrange(CLIENTID, PERIOD, PHOUR) %>% 
-      group_by(CLIENTID, PERIOD, PHOUR) %>%
-      slice(1) %>%                # select the first nreps measurements
-      ungroup()   
-  }
-  
-  # then merge choose_hour with eg1 data to get the baseline (or postdose) measurement
-  newdata <- right_join( eg1 %>% arrange(CLIENTID, PERIOD, PHOUR, DAY, HOUR),
-                         choose_hour %>% arrange(CLIENTID, PERIOD, PHOUR), 
-                         by = c("CLIENTID", "PERIOD", "PHOUR") )
-  
+    eg1 <- create_eg(eg)             # transpose the data
+    eg2 <- create_baseline(eg)       # label the baselines
+    
+    # merge by PHOUR
+    bl <- eg2 %>% filter(trimws(EG_TEST) != "OVERALL INTERPRETATION") %>%
+                  select(CLIENTID, PERIOD, PHOUR, status) %>% 
+                  arrange(CLIENTID, PERIOD, PHOUR) %>% 
+                  distinct()
+    
+    # ts <- eg2 %>% filter(! status %in% c("BASELINE", "POSTDOSE")) %>% select(CLIENTID, PHOUR, DAY, HOUR, EG_TEST, status)
+   
+    # then merge choose_hour with eg1 data to get the baseline (or postdose) measurement
+    eg3 <- left_join(eg1 %>% arrange(CLIENTID, PERIOD, PHOUR), 
+                     bl,  by = c("CLIENTID", "PERIOD", "PHOUR")) %>%
+                filter(status == "BASELINE" | status == "POSTDOSE")  # only interested in baseline and postdose
+
   # check whether each time point has correct replicate numbers
+  choose_hour <- bl %>% filter(status == "BASELINE" | status == "POSTDOSE") %>% 
+          select(CLIENTID, PERIOD, PHOUR)
   phour_tab <- as.data.frame(ftable(choose_hour ));
   phour_tab$Freq <- phour_tab$Freq*reps
   
-  data_tab <- as.data.frame(ftable(newdata %>% select(CLIENTID, PERIOD, PHOUR)))
+  obs_hour <- eg3 %>% select(CLIENTID, PERIOD, PHOUR)
+  data_tab <- as.data.frame(ftable(obs_hour))
   # these are the subjects having issue with measurements
   phour_tab <- phour_tab %>% arrange(CLIENTID, PERIOD, PHOUR)
   data_tab <- data_tab %>% arrange(CLIENTID, PERIOD, PHOUR)
-  
+
   prob_index <- which(phour_tab != data_tab, arr.ind = T)
   
-  id_clean <- rep(T, nrow(newdata))  # by default, choose all rows
+  id_clean <- rep(T, nrow(eg3))  # by default, choose all rows
   
   # if the index matrix is not empty, then the corresponding subject has measurement issues
   if(nrow(prob_index) > 0 ){
@@ -99,18 +94,18 @@ replicate_eg <- function(eg1, reps= 3, isBase = T){
     nreps <- data_tab[prob_index[, 1], 4]
     nper <- data_tab[prob_index[, 1], 2]
     nphour <- data_tab[prob_index[, 1], 3]
-    message("WARNING: number of replicates for each protocol hour should be ", reps, sep = "")
+    message("WARNING: number of replicates for each protocol hour should be ", reps, "\n", sep = "")
     for (i in 1:length(subject_id)){
       message("subject ", trimws(subject_id[i]), " has ", nreps[i], " measurements at ", 
               nphour[i], " PERIOD ", nper[i], sep = "")
-      dirty_obs <- which(newdata$CLIENTID == subject_id[i] & newdata$PERIOD == nper[i] &
-                           newdata$PHOUR == nphour[i])
+      dirty_obs <- which(eg3$CLIENTID == subject_id[i] & eg3$PERIOD == nper[i] &
+                           eg3$PHOUR == nphour[i])
       id_clean[dirty_obs] <- F  # these rows have replicate issues
     }
   }
   
-  data_clean <- newdata[id_clean, ]
-  data_dirty <- newdata[!id_clean, ]
+  data_clean <- eg3[id_clean, ]
+  data_dirty <- eg3[!id_clean, ]
   rownames(data_dirty) <- 1:nrow(data_dirty)
   
   result <- list(data_clean = data_clean, data_dirty=data_dirty)
@@ -160,7 +155,7 @@ replicate_clean <- function(data, rm_row = NULL){
 replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), prefix= "Base"){
   names(data) <- toupper(names(data))
   var_of_interest <- data %>% select(CLIENTID, PERIOD, PHOUR, 
-                                     one_of(var)) 
+                                     one_of(var))    # how to select a column whose name is quoted.
   averages <- var_of_interest %>% group_by(CLIENTID, PERIOD, PHOUR) %>%
     summarize_each(funs(mean))
   
@@ -177,16 +172,17 @@ replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), pr
 #' Get the averages of the replicates
 #' 
 #' @title calculate the change from baselines
-#' @param baseline the baseline replicates. An object returned from \code{replicate_clean}
-#' @param postdose the postdose replicates. An object returned from \code{replicate_clean}
+#' @param data. An object returned from \code{replicate_clean}
 #' @param var the variables used to do the calculation
 #' @return a data frame
 #' @export
 #' @seealso \code{\link{replicate_clean}}
 #' 
 
-change_from_base <- function(baseline, postdose, var = c("HR", "PR", "QRS", "QT", "QTCF")){
+change_from_base <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF")){
   
+  baseline <- data %>% filter(status == "BASELINE")
+  postdose <- data %>% filter(status == "POSTDOSE")
   
   base_ave <- replicate_average(baseline, var = var)
   post_ave <- replicate_average(postdose, var = var, prefix = "")

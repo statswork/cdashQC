@@ -135,8 +135,10 @@ new_create_included <- function(ex, dm, cr, ds){
   
   seqtest1 <- full_join(seqtest %>% arrange(ptno), 
                         full_join(dem %>% arrange(ptno),
-                            full_join(chk_in %>% arrange(ptno), 
-                                      dis %>% arrange(ptno)))) %>%
+                                  full_join(chk_in %>% arrange(ptno), 
+                                            dis %>% arrange(ptno), by = "ptno"),
+                                  by = "ptno"), 
+                        by = "ptno") %>%
               mutate(flag = "")
   id3 <- seqtest1$trtflg != "" | seqtest1$chkflg != ""  # the SAS code has DS_ANS included
   seqtest1$flag[id3] <- "*"
