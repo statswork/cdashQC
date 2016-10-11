@@ -25,7 +25,7 @@ create_vs <- function(vs){
   
   attention <- vs %>% filter(VS_TEST=="OVERALL COMMENT") 
   if (nrow(attention != 0))
-    message("There is unusual measurements, check VS_TEST that have value OVERALL COMMENT")
+    message("There is unusual measurements, check VS_TEST that have value 'OVERALL COMMENT'")
   
   vs1 <- vs %>% filter(VS_TEST !="OVERALL COMMENT") %>% 
     mutate(ptno = as.numeric(CLIENTID), 

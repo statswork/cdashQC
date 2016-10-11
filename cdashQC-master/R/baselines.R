@@ -44,6 +44,7 @@ find_test <- function(data, var_identifier = "_TEST"){
 #' @param data currently support \code{vs}, \code{eg} and \code{lb_cq}.
 #' @param var_identifier a string that can be used to identify the variable name e.g.(\code{VS_TEST, EG_TEST, LB_TEST})
 #' @return a data frame where by-subject baseline hour is determined. 
+#' @export
 
 find_base_phour <- function(data, var_identifier = "_TEST"){
   
@@ -96,6 +97,7 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
 #' @param data currently support \code{vs}, \code{eg} and \code{lb_cq}.
 #' @param var_identifier a string that can be used to identify the variable name e.g.(\code{VS_TEST, EG_TEST, LB_TEST})
 #' @return a data frame with an extra column \code{status} whose value could be one of \code{BASELINE}, \code{POSTDOSE} and \code{PREDOSE (NOT BASELINE)} 
+#' @export
 
 
 create_baseline <- function(data, var_identifier = "_TEST"){

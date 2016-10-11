@@ -91,62 +91,18 @@ create_lb_cq <- function(lb_cq, included, ex){
 }
 
 
-# #' Create baseline data
-# #' @title create a baseline from lb_cq.
-# #' @param laborig  the dataset returned by \code{create_lb_cq()}.
-# #' @return the baseline data set.
-# #'
 
 
 # Step 2: Get the baselines  ----------------------------------------------
 
 create_lab_baseline <- function(laborig){
 
-  temp1 <- laborig
-  ## construct the baseline------------------------
-      # separate the test codes into two categories: 1. negative hours as baseline, 2. missing hours as baseline
-      # output: a data frame with first column being
-      baseline_hour <- function(temp1){
-        testc<- temp1 %>% select(LB_CAT, LB_TESTC) %>% distinct()  # all the test codes
-        testc_Negative <- rep(F, nrow(testc)) # create an indicator to specify whether this code has negative hours as baseline
-        for( i in 1: nrow(testc)){
-          hours <- unique(temp1$HOUR[temp1$LB_TESTC == testc$LB_TESTC[i]])
-          if (any(hours<0, na.rm = T)) {testc_Negative[i] <- T }
-          else {testc_Negative[i] <- F}
-        }
-        testc$negativeHour <- testc_Negative
-        data.frame(testc)
-      }
+  baselines <- create_baseline(laborig) %>%        # create a column indicating whether this obs is baseline or not
+             filter(status == "BASELINE") %>%
+             mutate(bl = trimws(LB_NRIND), baseperiod = PERIOD, baseday = DAY, basehour = HOUR) %>%
+             select(LB_CAT, LB_TESTC, ptno, baseperiod, baseday, basehour, bl) %>%
+             arrange(LB_CAT, LB_TESTC, ptno, baseperiod, baseday, basehour)
 
-
-  baseline_code_index <- baseline_hour(temp1)
-
-  # temp2 has one more column than temp1, which indicates whether we should use NA or negative hours as baseline hours
-  temp2 <-  inner_join(temp1 %>% arrange(LB_CAT, LB_TESTC),
-                       baseline_code_index %>% arrange(LB_CAT, LB_TESTC),
-                       by =c("LB_CAT", "LB_TESTC"))
-
-  # subset to have negative hours as baseline
-  baseline1 <-  temp2 %>% filter(negativeHour==T) %>%
-                  filter((HOUR < 0  & !is.na(HOUR)) & trimws(LB_ORRES) != "") %>%
-                  mutate(period_baseline = PERIOD, basehour = HOUR) %>%
-                  group_by(LB_CAT, LB_TESTC, ptno, period_baseline) %>%
-                  filter(row_number()== n())  %>%  # select last.obs, equivalent to if last.hour
-                  mutate(bl = trimws(LB_NRIND), basehour= HOUR) %>%
-                  ungroup() %>%
-                  select(LB_CAT, LB_TESTC, ptno, period_baseline, bl, basehour)
-
-  # subset to have NA hours as baseline
-  baseline2 <- temp2 %>% filter(negativeHour==F) %>%
-                  filter(is.na(HOUR) & trimws(LB_ORRES) != "") %>%
-                  mutate(period_baseline = PERIOD, basehour = HOUR) %>%
-                  group_by(LB_CAT, LB_TESTC, ptno, period_baseline) %>%
-                  filter(row_number()== n())  %>%  # select last.obs, equivalent to if last.hour
-                  mutate(bl = trimws(LB_NRIND)) %>%
-                  select(LB_CAT, LB_TESTC, ptno, period_baseline, bl, basehour)
-
-  # this is the baseline
-  baselines <- bind_rows(baseline1, baseline2)
 
   return(baselines)
 }
@@ -162,7 +118,9 @@ create_lab_baseline <- function(laborig){
 
 create_lab_postdose <- function(laborig){
   ## post dose
-  temp1 <- laborig
+  temp1 <- create_baseline(laborig) %>%        # create a column indicating whether this obs is baseline or not
+    filter(status == "POSTDOSE")
+  
   postdose <- temp1 %>% filter(HOUR > 0 & trimws(LB_ORRES)!= "")
 
   return(postdose)
@@ -171,7 +129,6 @@ create_lab_postdose <- function(laborig){
 
 
 # Step 4: create the lab shift table  ----------------------------------------------
-
 
 #' Create the lab shift table.
 #'
@@ -185,7 +142,100 @@ create_lab_postdose <- function(laborig){
 #'
 
 
-labshift <- function(lb_cq, included, ex, UA=F){
+labshift <- function(lb_cq, included, ex, UA= F){
+  
+  # clean the lab data
+  laborig <- create_lb_cq(lb_cq, included, ex)
+  
+  
+  # get baseline
+  baselines <- create_lab_baseline(laborig)
+  # get postdose
+  postdose <- create_lab_postdose(laborig)
+  
+  labfinal2 <- inner_join(postdose %>% arrange(LB_CAT, LB_TESTC, ptno),
+                          baselines %>% arrange(LB_CAT, LB_TESTC, ptno),
+                          by = c("LB_CAT", "LB_TESTC", "ptno")) %>%
+                    mutate(change = paste(trimws(bl), trimws(LB_NRIND), sep = ""))
+  
+  if(!UA){        # if it's not UA test
+        labfinal0 <- labfinal2 %>% filter(trimws(LB_CAT) != "UA") 
+        labfinal1 <- labfinal0 %>% select(LB_CAT, LB_TESTC,  SEQ, DAY, change)
+        result <- as.data.frame(ftable(labfinal1))                # multi-layer tables
+        result1 <- dcast(result, LB_CAT + LB_TESTC + SEQ + DAY ~ change, value.var = "Freq")
+        
+        header <- c("LL", "LN", "LH", "NL", "NN", "NH", "HL", "HN","HH")
+        t1 <- !(header %in%  names(result1))    # which columns did not show up 
+        
+        zeros <- data.frame(matrix(0, nrow = nrow(result1), ncol =sum(t1)))  # make those columns to be 0
+        names(zeros) <- header[t1]
+        result2 <- bind_cols(result1, zeros) %>% 
+          mutate_if(is.factor, as.character)   
+        # if the variable is factor, turn it to character, so result3 won't issue warning message
+        
+        result2 <- result2 %>% select(LB_CAT, LB_TESTC, SEQ, DAY, 
+                                      LL, LN, LH, NL, NN, NH, HL, HN, HH) %>%
+                          filter( LL+ LN+ LH+ NL+ NN+ NH+ HL+ HN+ HH  != 0)
+        
+        # remove rows that have all zeros
+        
+        
+  }
+  
+  else {                       # if it's UA test
+        labfinal0 <- labfinal2 %>% filter(trimws(LB_CAT) == "UA")
+        labfinal1 <- labfinal0 %>% select(LB_CAT, LB_TESTC,  SEQ, DAY, change)
+        result <- as.data.frame(ftable(labfinal1))
+        
+        result1 <- dcast(result, LB_CAT + LB_TESTC + SEQ + DAY ~ change, value.var = "Freq")
+        
+        header <- c("NN", "NH", "HN", "HH")
+        t1 <- !(header %in%  names(result1))    # which columns did not show up 
+        
+        zeros <- data.frame(matrix(0, nrow = nrow(result1), ncol =sum(t1)))  # make those columns to be 0
+        names(zeros) <- header[t1]
+        result2 <- bind_cols(result1, zeros) %>% 
+          mutate_if(is.factor, as.character)
+        
+        result2 <- result2 %>% select(LB_CAT, LB_TESTC, SEQ, DAY, 
+                                     NN, NH, HN, HH) %>%
+                              filter(NN + NH + HN + HH  != 0)
+    }
+  
+  full_name <- laborig %>% select(LB_CAT, LB_CAT_D, LB_TEST, LB_TESTC) 
+  
+  result3 <- right_join(full_name %>% arrange(LB_CAT, LB_TESTC) %>% distinct(), 
+                        result2 %>% arrange(LB_CAT, LB_TESTC), 
+                        by = c("LB_CAT", "LB_TESTC"))
+  
+  return(result3)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###################  THIS FUNCTION IS NO LONGER USED (But it's correct) ----------------------------------
+
+labshift_old <- function(lb_cq, included, ex, UA=F){
 
    # clean the lab data
   laborig <- create_lb_cq(lb_cq, included, ex)
