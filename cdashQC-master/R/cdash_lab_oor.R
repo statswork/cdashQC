@@ -71,7 +71,11 @@ create_laborig <- function(lb_cq){
                                 LB_TESTC = replace(LB_TESTC, id3, "BC"), 
                                 LB_ORREU = replace(LB_ORREU, id2, "RATIO"),
                                 LB_ORREU = replace(LB_ORREU, id3, "RATIO")) 
-                      
+  
+  laborig <- laborig %>% mutate(formatdate= parse_date_time(paste(ymd(LB_DAT), seconds_to_period(LB_TIM)), "Ymd HMS", truncated = 3)) %>%
+                         mutate(LB_TIM = format(formatdate, "%H:%M:%S")) %>%
+                         select(-formatdate)
+  
    return(laborig)
 }
 
@@ -176,16 +180,43 @@ oor_value <- function(lb_cq, transpose = F){
 }
 
 
-##  read the full name of the codes
+##  read the full name of the codes and it's normal range indicator
+
 the_code <- function(lb_cq){
-  # should have this data loaded by the time you load the package!
 
   lab_cat <- lb_cq %>% select(LB_CAT, LB_TESTC) %>% 
                   arrange(LB_CAT, LB_TESTC) %>% distinct()
   
-  codes <- right_join(codes %>% arrange(LB_TESTC), 
-                      lab_cat %>% arrange(LB_TESTC), by = "LB_TESTC") 
-  return(codes)
+  # the codes data is available once you load the pacage "cdashQC".
+  code1 <- right_join(codes %>% arrange(LB_TESTC), 
+                      lab_cat %>% arrange(LB_TESTC), by = "LB_TESTC")
+  
+  # change "~" to " " in TTL, this will make the column names wrap
+  # create a new variable for LB_TESTC for easy selection
+  code1 <- code1 %>% mutate(var_name = paste(LB_CAT, "_", LB_TESTC, sep=""),
+                            TTL = gsub("~", " ", TTL))     
+  # and also the normal ranges         
+  range0 <- create_laborig(lb_cq) %>% normal_range() %>% ungroup()
+  
+  if (length(unique(range0$sex)) > 1) {             # more than one gender is present
+    ranges <- range0  %>% dcast(LB_CAT + LB_TESTC ~sex, value.var= "range")
+    ids <- is.na(ranges$A)
+    ranges$A[ids] <- paste(ranges$FEMALE[ids], ranges$MALE[ids], sep = " ")
+    ranges <- ranges %>% mutate(range = A) %>% select(LB_CAT, LB_TESTC, range)
+  }
+  else { # only one gender
+    ranges <-  range0 %>% select(LB_CAT, LB_TESTC, range)
+  }
+  
+  
+  # the full name will come with its normal range
+  code2 <- left_join(code1 %>% arrange(LB_CAT, LB_TESTC), 
+                     ranges %>% arrange(LB_CAT, LB_TESTC), 
+                     by = c("LB_CAT", "LB_TESTC")) %>%
+    mutate(TTL = paste(TTL, range, sep = " "))
+  
+  
+  return(code2)
 }
 
 
@@ -288,7 +319,7 @@ lab_rept <- function(lb_cq, ex, cat = "UA"){
       return(oor)
     }
     
-    else { message(paste("Whoops! ", cat, " does not have out-of-range values OR \nvariable LB_CAT does not contain the value '", cat, "'", sep = ""))}
+    else { message(paste("Whoops! ", cat, " does not have out-of-range values  \nvariable OR 'LB_CAT' does not contain the value '", cat, "'", sep = ""))}
     
 }
 
@@ -305,117 +336,56 @@ lab_rept <- function(lb_cq, ex, cat = "UA"){
 # #' @export
 
 
-customized_lab_rept <- function(lb_cq, ex, cat= "UA", var_per_block=5, digit_keep = 2){
+print_by_block <- function(data, col_label = names(data),  cat = "UA", 
+                           var_per_block = 5, digit_keep = 2){
   
-  oor <- lab_rept(lb_cq, ex, cat)
+  # first, separate the data into two, one for fixed columns (those columns will be the same for all output)
+  part1 <- data %>% select(-starts_with( paste(cat, "_", sep = "")))
+  part2 <- data %>% select(starts_with( paste(cat, "_", sep = "")))
+  the_rest_name <-  names(part1)
+  cat_name <-  names(part2)
   
-
-  if (!is.null(oor)){
-    # first, separate the data into two, one for fixed columns (those columns will be the same for all output)
-    part1 <- oor %>% select(-starts_with( paste(cat, "_", sep = "")))
-    part2 <- oor %>% select(starts_with( paste(cat, "_", sep = "")))
-    the_rest_name <-  names(part1)
-    cat_name <-  names(part2)
-    
-    # need full name of the codes 
-    codes <- the_code(lb_cq) %>% 
-            mutate(var_name = paste(LB_CAT, "_", LB_TESTC, sep=""),
-                   TTL = gsub("~", " ", TTL))      # change "~" to " " in TTL, this will make the column names wrap
-    # and also the normal ranges         
-    range0 <- create_laborig(lb_cq) %>% normal_range() 
-    ranges <- range0  %>% dcast(LB_CAT + LB_TESTC ~sex, value.var= "range")
-    ids <- is.na(ranges$A)
-    ranges$A[ids] <- paste(ranges$FEMALE[ids], ranges$MALE[ids], sep = " ")
-    ranges <- ranges %>% mutate(range = A) %>% select(LB_CAT, LB_TESTC, range)
-    
-    # the full name will come with its normal range
-    codes <- left_join(codes %>% arrange(LB_CAT, LB_TESTC), 
-                       ranges %>% arrange(LB_CAT, LB_TESTC), 
-                        by = c("LB_CAT", "LB_TESTC")) %>%
-              mutate(TTL = paste(TTL, range, sep = " "))
-
-    
-    ## devivde the variables into multiple blocks and print them one by one.
-    
-    block <- ceiling(length(cat_name)/var_per_block)  # how many variables per block
-    for ( k in 1:block){
-      if(k == block){                        # if this is the last block
-        from1 <- (k-1)*var_per_block + 1
-        to1 <- length(cat_name)
-        # c(from1, to1)
-        
-        # get the corresponding code
-        test_code <- as.character(cat_name[from1:to1])
-        testcode <- data.frame(var_name = test_code, stringsAsFactors=F) 
-        
-        # match the code with its full name
-        full_name <- left_join(testcode %>% arrange(var_name), 
-                               codes %>% arrange(var_name), by = "var_name") %>%
-                      select(var_name, TTL) %>% distinct()
-        
-        col_to_show <- which(cat_name %in% test_code)
-    
-        part2_1 <- part2[, col_to_show]          # keep those names in this output
-        emt <- keep_non_empty(part2_1)           # get the index of empty columns and empty rows
-        
-        part2_keep <- part2_1[, emt$keep_cols]   # remove empty columns
-       
-        id1 <- is.na(part2_keep)                 # replace "NA" with ""
-        part2_keep[id1] <- ""
-        
-        oor1 <- cbind(part1, part2_keep)         # remove empty rows
-        oor1 <- oor1[emt$keep_rows, ]
-        
-        # now the column names with full test name 
-        col_name <- c(as.character(the_rest_name), as.character(full_name$TTL[emt$keep_cols]))
-        rownames(oor1) <- NULL
-        # print out
-        print(kable(oor1, digits =digit_keep, table.attr='class="flat-table"',
-                    col.names = col_name, caption = paste(cat, ":block ", k, " of ", block, sep = "")))
-      }
-      
-      else {                 # if this is not the last block
+  ## devivde the variables into multiple blocks and print them block by block.
+  block <- ceiling(length(cat_name)/var_per_block)  # how blocks are needed
+  
+  for ( k in 1:block){
+    if(k == block){                        # if this is the last block
+      from1 <- (k-1)*var_per_block + 1
+      to1 <- length(cat_name)
+    }
+    else{         # if this is not the last block
         from1 <- (k-1)*var_per_block + 1
         to1 <-  k*var_per_block;
-       
-        # get the corresponding code
-        test_code <- as.character(cat_name[from1:to1])
-        testcode <- data.frame(var_name = test_code, stringsAsFactors=F) 
-        
-        # try to match the code with its full name
-        full_name <- left_join(testcode %>% arrange(var_name), 
-                               codes %>% arrange(var_name), by = "var_name") %>%
-                     select(var_name, TTL) %>% distinct()
-        
-        col_to_show <- which(cat_name %in% test_code)
-        
-        part2_1 <- part2[, col_to_show]          # keep those names in this output
-        emt <- keep_non_empty(part2_1)           # get the index of empty columns and empty rows
-        
-        part2_keep <- part2_1[, emt$keep_cols]   # remove empty columns
-        
-        id1 <- is.na(part2_keep)                 # replace "NA" with ""
-        part2_keep[id1] <- ""
-        
-        oor1 <- cbind(part1, part2_keep)         # remove empty rows
-        oor1 <- oor1[emt$keep_rows, ]
-        rownames(oor1) <- NULL
-        
-        # now the column names with full test name 
-        col_name <- c(as.character(the_rest_name), as.character(full_name$TTL[emt$keep_cols]))
-          
-        # print out 
-        print(kable(oor1, digits =digit_keep, table.attr='class="flat-table"',col.names = col_name, 
-                    caption = paste(cat, ":block ", k, " of ", block, sep = "")))
-        
-        }
+    }
+      # c(from1, to1)
       
-      }
-  
+      # get the corresponding code
+      test_code <- as.character(cat_name[from1:to1])
+      col_to_show <- which(cat_name %in% test_code)
+      
+      part2_1 <- part2[, col_to_show]          # keep those names in this output
+      emt <- keep_non_empty(part2_1)           # get the index of empty columns and empty rows
+      part2_keep <- part2_1[, emt$keep_cols]   # remove empty columns
+      id1 <- is.na(part2_keep)                 # replace "NA" with ""
+      part2_keep[id1] <- ""
+      oor1 <- cbind(part1, part2_keep)         # remove empty rows
+      oor1 <- oor1[emt$keep_rows, ]
+      
+      # now the column names with desired lables
+      p1 <- ncol(part1)
+      col_num <- c(1:p1, p1 + from1:to1)
+      
+      col_name <- col_label[col_num]
+      rownames(oor1) <- NULL
+      # print out
+      print(kable(oor1, digits =digit_keep, table.attr='class="flat-table"',
+                  col.names = col_name, caption = paste(cat, ":block ", k, " of ", block, sep = "")))
+    }
+    
     
   }
   
-}
+
 
 
 
@@ -431,14 +401,32 @@ customized_lab_rept <- function(lb_cq, ex, cat= "UA", var_per_block=5, digit_kee
 #' @export
 
 
-all_lab_rept <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2){
+lab_oor <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2){
   
   laborig <- create_laborig(lb_cq)
-  cat_all <- unique(laborig$LB_CAT)
+  cat_all <- unique(laborig$LB_CAT)  # how many LAB_CAT
+  full_name <- the_code(lb_cq)       # the code with its full name and normal ranges
+  
   
   for (i in 1: length(cat_all)){
-    customized_lab_rept(lb_cq, ex, cat= cat_all[i], var_per_block=var_per_block, digit_keep = digit_keep)
+    
+    oor <- lab_rept(lb_cq, ex, cat=cat_all[i])  # create the lab oors
+    
+    if(!is.null(oor)){  # if the data is not empty
+      var1 <- names(oor)   # 
+      id1 <- which(grepl(paste(cat_all[i], "_", sep = ""), var1))
       
+      #try to get the full name in order
+      t1 <- data.frame(var_name = var1[id1], sorted = 1:length(id1), stringsAsFactors = F)
+      t2 <- left_join(t1 %>% arrange(var_name), 
+                      full_name %>% arrange(var_name), by = "var_name")
+      # this should give the right name order
+      col_name_all <- c(var1[-id1], t2$TTL[order(t2$sorted)] )
+      # pass the name to the following function
+      print_by_block(oor, col_label = col_name_all, cat= cat_all[i], 
+                     var_per_block=var_per_block, digit_keep = digit_keep)
+    }
+  
   }
   
 }
