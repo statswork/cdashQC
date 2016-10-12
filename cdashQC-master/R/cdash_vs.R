@@ -17,6 +17,9 @@
 
 create_vs <- function(vs){
   
+  
+ vs <- create_phour(vs)
+  
   #Change names of variables
   vs$VS_TEST <- trimws(vs$VS_TEST)
   vs$VS_TEST[vs$VS_TEST == "BODY MASS INDEX"] <- "BMI"

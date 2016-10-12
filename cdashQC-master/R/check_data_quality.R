@@ -18,6 +18,9 @@ calc_mode <- function(x) {
 #'
 check_eg <- function(eg){
   
+  eg <- create_phour(eg)
+
+  
   eg0 <- eg %>% select(PERIOD, PHOUR, CLIENTID)
      
   eg_table <- as.data.frame(ftable(eg0)) %>% arrange(PERIOD, PHOUR, CLIENTID)
@@ -54,6 +57,8 @@ check_eg <- function(eg){
 #'
 
 check_vs <- function(vs){
+  vs <- create_phour(vs)
+ 
   vs0 <- vs %>% select(PERIOD, PHOUR, CLIENTID)
   
   vs_table <- as.data.frame(ftable(vs0)) %>% arrange(PERIOD, PHOUR, CLIENTID)

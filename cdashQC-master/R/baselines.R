@@ -102,6 +102,8 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
 
 create_baseline <- function(data, var_identifier = "_TEST"){
   
+  data <- create_phour(data)
+  
   # find the baseline hours for each test category
   basehour <- find_base_phour(data, var_identifier)
   var_sort <- names(basehour)[!names(basehour) %in% c("status")]  # sort by these variables

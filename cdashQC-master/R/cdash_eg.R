@@ -14,6 +14,9 @@
 
 create_eg <- function(eg){
   
+  #  if there's no PHOUR variable then create it 
+  eg <- create_phour(eg)
+  
    # do the transpose
    eg_value <- eg %>% filter(trimws(EG_TEST) != "OVERALL INTERPRETATION") %>%
      select(CLIENTID, PERIOD, PHOUR, DAY, HOUR, EG_TEST, EG_ORRES, EG_DAT, EG_TIM) %>% # choose columns
@@ -44,7 +47,7 @@ create_eg <- function(eg){
 #' get the replicates for each protocol hour (PHOUR)
 #' 
 #' @title get the replicates for eg data.
-#' @param eg
+#' @param eg the data set eg.
 #' @param reps  how many replicates will be measured for each protocol hour. 
 #' @param isBase Is this for finding baseline? Default set to be \code{TRUE}.
 #' @return  a list 
@@ -122,6 +125,7 @@ replicate_eg <- function(eg, reps= 3){
 #' @param rm_row a vector of integers specifying which rows should be removed from the dirty data.
 #' @return the cleaned replicates
 #' @export
+#' @seealso \code{\link{replicate_eg}}
 
 
 replicate_clean <- function(data, rm_row = NULL){
@@ -151,6 +155,7 @@ replicate_clean <- function(data, rm_row = NULL){
 #' @param var the variables used to do the calculation
 #' @return the averages
 #' @export
+#' @seealso \code{\link{replicate_clean}}
 
 replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), prefix= "Base"){
   names(data) <- toupper(names(data))
@@ -176,7 +181,9 @@ replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), pr
 #' @param var the variables used to do the calculation
 #' @return a data frame
 #' @export
-#' @seealso \code{\link{replicate_clean}}
+#' @seealso \code{\link{replicate_clean}}  
+#' @seealso \code{\link{replicate_eg}}
+#' @seealso \code{\link{create_eg}}
 #' 
 
 change_from_base <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF")){

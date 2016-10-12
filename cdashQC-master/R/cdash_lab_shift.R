@@ -25,6 +25,8 @@
 
 
 create_lb_cq <- function(lb_cq, included, ex){
+  
+  lb_cq <- create_phour(lb_cq)
 
   laborig <- lb_cq %>% filter(trimws(toupper(LB_UNSCH)) != "SPECIAL" |
                                 trimws(toupper(LB_CMTST)) != "CLOTTED UNABLE TO ANALYZE") %>%

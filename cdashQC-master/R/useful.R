@@ -239,3 +239,18 @@ create_threshold <- function(flagvar, lower = -Inf, upper = Inf,
 
 
 
+
+## 
+# create protocol hour (PHOUR) if it's not already in the data set. 
+
+create_phour <- function(data){
+  
+  if (!any(names(data) == "PHOUR")) {
+    message("Variable 'PHOUR' not detected, creating it by concatnating variables 'DAY' and 'HOUR'")
+    data <- data %>% mutate(PHOUR = paste("Day", DAY, "Hour", round(HOUR, 2)))  
+  }
+  
+  return(data)
+  
+}
+
