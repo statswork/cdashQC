@@ -7,9 +7,9 @@
 change_from_base(data, var = c("HR", "PR", "QRS", "QT", "QTCF"))
 }
 \arguments{
-\item{var}{the variables used to do the calculation}
+\item{data}{An object returned from \code{replicate_clean}}
 
-\item{data.}{An object returned from \code{replicate_clean}}
+\item{var}{the variables used to do the calculation}
 }
 \value{
 a data frame

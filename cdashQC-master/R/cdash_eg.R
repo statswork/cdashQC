@@ -49,7 +49,6 @@ create_eg <- function(eg){
 #' @title get the replicates for eg data.
 #' @param eg the data set eg.
 #' @param reps  how many replicates will be measured for each protocol hour. 
-#' @param isBase Is this for finding baseline? Default set to be \code{TRUE}.
 #' @return  a list 
 #'  \item{data_clean}{the subjects containing correct number of resplicates}
 #'  \item{data_dirty}{the subjects that have different number of replicates than desired}
@@ -153,6 +152,7 @@ replicate_clean <- function(data, rm_row = NULL){
 #' @title get the averanges of the replicates
 #' @param data  an object returned from \code{replicate_clean}
 #' @param var the variables used to do the calculation
+#' @param prefix give a prefix to \code{var} so the names are changed after calculating the averages
 #' @return the averages
 #' @export
 #' @seealso \code{\link{replicate_clean}}
@@ -177,7 +177,7 @@ replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), pr
 #' Get the averages of the replicates
 #' 
 #' @title calculate the change from baselines
-#' @param data. An object returned from \code{replicate_clean}
+#' @param data  An object returned from \code{replicate_clean}
 #' @param var the variables used to do the calculation
 #' @return a data frame
 #' @export
@@ -191,7 +191,7 @@ change_from_base <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF")){
   baseline <- data %>% filter(status == "BASELINE")
   postdose <- data %>% filter(status == "POSTDOSE")
   
-  base_ave <- replicate_average(baseline, var = var)
+  base_ave <- replicate_average(baseline, var = var, prefix = "Base")
   post_ave <- replicate_average(postdose, var = var, prefix = "")
   
   base_post_ave <- left_join(post_ave %>% arrange(CLIENTID, PERIOD),

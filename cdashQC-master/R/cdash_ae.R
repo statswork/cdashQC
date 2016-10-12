@@ -93,14 +93,39 @@ create_aet <- function(ae, ex, included, improv = 99){
 
 
 
-#' ae1
+
+#' list the ae
 #'
-#' @title Create Adverse event list.
-#' @param aet  the dataset created by \code{create_aet()}
-#' @return a data frame 
+#' @title list Adverse Envent
+#' @param aet  created by \code{create_aet}
+#' @param type an indicator. Should I list \code{ae1}, \code{ae2} or \code{ae3}?
+#' @return a data frame
 #' @export
 #' @seealso \code{\link{create_aet}}
 #' 
+
+
+ae_listing <- function(aet, type = 1){
+  
+  
+  
+  if(type == 1){result <- ae1(aet)}
+  else if (type == 2) {result <- ae2(aet)}
+  else if (type == 3) {result <- ae3(aet)}
+  return(result)
+}
+
+
+
+
+# #' ae1
+# #' 
+# #' @title Create Adverse event list.
+# #' @param aet  the dataset created by \code{create_aet()}
+# #' @return a data frame
+# #' @export
+# #' @seealso \code{\link{create_aet}}
+
 ae1 <- function(aet){
 
   aet_subset <-  aet %>% select(ptno, pern, t_e, AE_TERM, AE_STDT, AE_STTM, AE_ENDT, 
@@ -116,14 +141,14 @@ ae1 <- function(aet){
 
 
 
-#' ae2
-#'
-#' @title list Adverse Envent 2.
-#' @param aet the dataset created by \code{create_aet()}
-#' @return a data frame 
-#' @export
-#' @seealso \code{\link{create_aet}}
-#' 
+# #' ae2
+# #'
+# #' @title list Adverse Envent 2.
+# #' @param aet the dataset created by \code{create_aet()}
+# #' @return a data frame 
+# #' @export
+# #' @seealso \code{\link{create_aet}}
+# #' 
 ae2 <- function(aet){
 
   aet_subset <- aet %>% select(ptno, pern, EX_TRT_C, AE_TERM, AE_STDT, AE_STTM,
@@ -144,14 +169,14 @@ ae2 <- function(aet){
 
 
 
-#' ae3
-#'
-#' @title list Adverse Envent Non Drug Therapy.
-#' @param aet  created by \code{create_aet()}
-#' @return a data frame
-#' @export
-#' @seealso \code{\link{create_aet}}
-#' 
+# #' ae3
+# #'
+# #' @title list Adverse Envent Non Drug Therapy.
+# #' @param aet  created by \code{create_aet()}
+# #' @return a data frame
+# #' @export
+# #' @seealso \code{\link{create_aet}}
+# #' 
 
 ae3 <- function(aet){
 

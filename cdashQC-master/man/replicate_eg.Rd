@@ -10,8 +10,6 @@ replicate_eg(eg, reps = 3)
 \item{eg}{the data set eg.}
 
 \item{reps}{how many replicates will be measured for each protocol hour.}
-
-\item{isBase}{Is this for finding baseline? Default set to be \code{TRUE}.}
 }
 \value{
 a list 

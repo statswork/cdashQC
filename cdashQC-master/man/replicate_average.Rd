@@ -11,6 +11,8 @@ replicate_average(data, var = c("HR", "PR", "QRS", "QT", "QTCF"),
 \item{data}{an object returned from \code{replicate_clean}}
 
 \item{var}{the variables used to do the calculation}
+
+\item{prefix}{give a prefix to \code{var} so the names are changed after calculating the averages}
 }
 \value{
 the averages

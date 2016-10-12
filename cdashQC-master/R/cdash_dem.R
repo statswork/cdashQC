@@ -94,31 +94,34 @@ weight_height_bmi <- function(vs){
 
 
 # get the summary statistics
-get_summary <- function(var, categorical = F, name  = "race"){
 
-  if (categorical)  {
-    n <- length(var)
-    frequency <- table(var)
-    percent <- frequency/n
 
-    result <- data.frame(trait = rep(name, length(frequency)),
-                         Type = names(frequency),
-                         frequency = as.vector(frequency),
-                         percent=as.vector(percent) )
-
+get_summary <- function(data, categorical = F, group = "EX_TRT_C", var = "race", na.rm =T){
+  
+  if(categorical){
+    
+    result1 <- as.data.frame(ftable(data %>% select_(var, group))) %>% 
+      mutate(trait = toupper(var)) %>% spread_(group, "Freq")
   }
-  else {
-  result <- data.frame(trait =name,
-                       n = length(var),
-                       mean = mean(var),
-                       sd = sd(var),
-                       minimum = min(var),
-                       median = median(var),
-                       maximum =  max(var) )
+  else{
+    
+    
+    result <- data %>% select_(var, group) %>% 
+                  group_by_(group) %>% 
+                  summarise_(N = interp(~sum(val >0, na.rm = na.rm), val = as.name(var)), 
+                             MEAN = interp(~mean(val, na.rm = na.rm), val = as.name(var)),
+                             SD = interp(~sd(val, na.rm = na.rm), val = as.name(var)), 
+                             MINIMUM = interp(~min(val, na.rm = na.rm), val= as.name(var)), 
+                             MEDIAN = interp(~median(val, na.rm = na.rm), val = as.name(var)), 
+                             MAXIMUM = interp(~max(val, na.rm= na.rm), val =as.name(var))) %>% 
+                  mutate(trait = var)
+    
+    result1 <- result %>% melt(id = group) %>%
+               mutate(trait = var) %>% spread_(group, "value")
   }
-  return(result)
+  
+  return(result1)
 }
-
 
 
 #' Summarize the demographic data
@@ -129,6 +132,31 @@ get_summary <- function(var, categorical = F, name  = "race"){
 #' @param vs the vs data set
 #' @return a data frame
 #' @export
+
+
+dem_s1 <- function(dm, ex, vs, included){
+  
+  vsdm_1 <-find_race(dm, ex) %>% arrange(ptno)
+  vsdm_2 <- weight_height_bmi(vs) %>% arrange(ptno)
+  
+  vsdm <- inner_join(vsdm_1, vsdm_2 , by = "ptno")  # combine race, ethnicity with BMI HEIGHT, WEIGHT
+  vsdm <- inner_join(vsdm %>% arrange(CLIENTID), 
+                     included %>% select(CLIENTID, SEQ), by = "CLIENTID")
+  
+
+  cat_race <- as.data.frame(ftable(vsdm %>% select(race, EX_TRT_C))) %>%
+                      mutate(trait= "RACE") %>% spread(EX_TRT_C, Freq)
+  cat_sex <- as.data.frame(ftable(vsdm %>% select(SEX, EX_TRT_C))) %>%
+                      mutate(trait= "SEX") %>% spread(EX_TRT_C, Freq)
+  cat <- bind_rows(cat_ethnic, cat_race, cat_sex) %>% mutate_if(is.factor, as.character)
+  cat[is.na(cat)] <- ""
+  coln <- which(names(cat) %in% c("ethnic", "race", "SEX"))
+  cat <- unite(cat, "type", coln, sep = "")
+
+
+       
+  
+}
 
 
 dem_summary <- function(dm, ex, vs){
