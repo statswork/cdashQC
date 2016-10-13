@@ -4,7 +4,7 @@
 \alias{dem_listing}
 \title{demographics listing.}
 \usage{
-dem_listing(dm, ex, vs)
+dem_listing(dm, ex, vs, included)
 }
 \arguments{
 \item{dm}{the dm data set}
@@ -12,11 +12,16 @@ dem_listing(dm, ex, vs)
 \item{ex}{the ex data set}
 
 \item{vs}{the vs data set}
+
+\item{inlcuded}{the included data set created by \code{new_create_included}}
 }
 \value{
 a data frame
 }
 \description{
 Summarize the demographic data
+}
+\seealso{
+\code{\link{new_create_included}}
 }
 

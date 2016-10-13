@@ -9,12 +9,13 @@ library(haven)  ## Read SAS data, a package from Hadley
 library(dplyr)  # data manipulation tools
 library(reshape2) # data manipulation tools
 library(knitr)    # output
-library(rmarkdown)
+library(rmarkdown)  # output
 library(lubridate)  # date, time and time span
-library(ggplot2)
-library(cdashQC)
-library(tidyr) #designed specifically for data tidying
-library(lazyeval)
+library(ggplot2)    # plot
+library(tidyr)      # tidy data
+library(lazyeval)  
+library(cdashQC)    # package
+
 
 
 ##########################################################################################

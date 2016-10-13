@@ -4,7 +4,7 @@
 \alias{dem_summary}
 \title{demographic summary.}
 \usage{
-dem_summary(dm, ex, vs)
+dem_summary(dm, ex, vs, included, group = "EX_TRT_C", na.rm = TRUE)
 }
 \arguments{
 \item{dm}{the dm data set}
@@ -12,11 +12,20 @@ dem_summary(dm, ex, vs)
 \item{ex}{the ex data set}
 
 \item{vs}{the vs data set}
+
+\item{group}{which variable name would be used to calculate summary statistics?}
+
+\item{na.rm}{should missing values be included?  \code{TRUE} by default.}
+
+\item{inlcuded}{the included data set created by \code{new_create_included}}
 }
 \value{
 a data frame
 }
 \description{
 Summarize the demographic data
+}
+\seealso{
+\code{\link{new_create_included}}
 }
 
