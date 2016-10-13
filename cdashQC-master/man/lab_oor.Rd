@@ -18,4 +18,7 @@ lab_oor(lb_cq, ex, var_per_block = 5, digit_keep = 2)
 \description{
 print out the OOR values for all LB_CAT automatically. This function is built on top of customized_lab_rept()
 }
+\examples{
+lab_oor(lb_cq, ex, var_per_block = 6, digit_keep =3)
+}
 

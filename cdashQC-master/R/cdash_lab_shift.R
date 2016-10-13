@@ -141,10 +141,14 @@ create_lab_postdose <- function(laborig){
 #' @param UA  whether to produce shift table for UA (should be done separately)
 #' @return the shift table
 #' @export
+#' @examples 
+#' included <- new_create_included(ex, dm, cr, ds)
+#' others <- labshift(lb_cq, included, ex,  UA=FALSE)  #not urinalysis
+#' UA <- labshift(lb_cq, included, ex, UA=TRUE)       # UA
 #'
 
 
-labshift <- function(lb_cq, included, ex, UA= F){
+labshift <- function(lb_cq, included, ex, UA= FALSE){
   
   # clean the lab data
   laborig <- create_lb_cq(lb_cq, included, ex)

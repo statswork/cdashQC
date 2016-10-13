@@ -45,6 +45,15 @@ find_test <- function(data, var_identifier = "_TEST"){
 #' @param var_identifier a string that can be used to identify the variable name e.g.(\code{VS_TEST, EG_TEST, LB_TEST})
 #' @return a data frame where by-subject baseline hour is determined. 
 #' @export
+#' @examples 
+#' # the following two will give you exactly the same result
+#' r1 <- find_base_phour(vs)
+#' r2 <- find_base_phour(vs, var_identifier = "VS_TEST")
+#' 
+#' # If you want to find baseline hours for eg, the following two methods are equivalent
+#' r3 <- find_base_phour(eg)
+#' r4 <- find_base_phour(eg, var_identifier = "EG_TEST")
+#' 
 
 find_base_phour <- function(data, var_identifier = "_TEST"){
   
@@ -98,6 +107,7 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
 #' @param var_identifier a string that can be used to identify the variable name e.g.(\code{VS_TEST, EG_TEST, LB_TEST})
 #' @return a data frame with an extra column \code{status} whose value could be one of \code{BASELINE}, \code{POSTDOSE} and \code{PREDOSE (NOT BASELINE)} 
 #' @export
+#' @seealso \code{\link{find_base_hour}}
 
 
 create_baseline <- function(data, var_identifier = "_TEST"){

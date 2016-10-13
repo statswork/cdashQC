@@ -15,7 +15,7 @@ library(ggplot2)    # plot
 library(tidyr)      # tidy data
 library(lazyeval)  
 library(cdashQC)    # package
-
+library(QCdata)     # example data sets of CA19379
 
 
 ##########################################################################################

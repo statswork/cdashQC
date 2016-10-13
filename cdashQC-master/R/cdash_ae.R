@@ -98,14 +98,14 @@ create_aet <- function(ae, ex, included, improv = 99){
 #'
 #' @title list Adverse Envent
 #' @param aet  created by \code{create_aet}
-#' @param type an indicator. Should I list \code{ae1}, \code{ae2} or \code{ae3}?
+#' @param type an indicator. Should I list \code{ae1 (type = 1)}, \code{ae2 (type = 2)} or \code{ae3 (type = 3)}?
 #' @return a data frame
 #' @export
 #' @seealso \code{\link{create_aet}}
 #' 
 
 
-ae_listing <- function(aet, type = 1){
+listing_ae <- function(aet, type = 1){
   
   
   

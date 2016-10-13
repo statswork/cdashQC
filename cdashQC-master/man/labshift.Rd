@@ -4,7 +4,7 @@
 \alias{labshift}
 \title{create the lab shift table.}
 \usage{
-labshift(lb_cq, included, ex, UA = F)
+labshift(lb_cq, included, ex, UA = FALSE)
 }
 \arguments{
 \item{lb_cq}{the dataset lb_cq read from sas}
@@ -20,5 +20,11 @@ the shift table
 }
 \description{
 Create the lab shift table.
+}
+\examples{
+included <- new_create_included(ex, dm, cr, ds)
+others <- labshift(lb_cq, included, ex,  UA=FALSE)  #not urinalysis
+UA <- labshift(lb_cq, included, ex, UA=TRUE)       # UA
+
 }
 

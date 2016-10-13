@@ -17,6 +17,14 @@ a data frame
 \description{
 Get the averages of the replicates
 }
+\examples{
+eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
+eg_prob <- eg2$data_dirty         # need manual check
+# the following rows should be removed
+rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
+eg3 <- replicate_clean(eg2, rows_removed)
+eg_change <- change_from_base(eg3, var = c("HR", "PR", "QRS", "QT", "QTCF"))
+}
 \seealso{
 \code{\link{replicate_clean}}
 

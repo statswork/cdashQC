@@ -12,7 +12,7 @@
 # #' \item{age}{Age calculated from start date of treatment}
 
 
-find_race <- function(dm, ex){
+find_race_age <- function(dm, ex){
   sort_col <- sort(names(dm))
   dm1 <- data.frame(dm[, sort_col])
 
@@ -73,8 +73,7 @@ find_race <- function(dm, ex){
 weight_height_bmi <- function(vs){
 
   vs$VS_TEST[trimws(toupper(vs$VS_TEST)) == "BODY MASS INDEX"] <- "BMI"
-  vs$ptno <- as.numeric(vs$CLIENTID)
-
+  
   # select the variables of interest
   row_vs <- which(toupper(vs$PERIOD) == "SCREEN" &
                     toupper(vs$VS_TEST) %in%
@@ -82,108 +81,78 @@ weight_height_bmi <- function(vs){
 
 
   #
-  col_vs <- names(vs) %in%  c("ptno", "VS_REU_R","VS_RES_R", "VS_TEST", "VS_DAT")
+  col_vs <- names(vs) %in%  c("CLIENTID", "VS_REU_R","VS_RES_R", "VS_TEST", "VS_DAT")
 
   vs1 <- vs[row_vs, col_vs] %>% arrange(VS_RES_R)
   vs1$VS_RES_R <- as.numeric(vs1$VS_RES_R)
 
-  vs2 <- dcast(vs1, ptno + VS_DAT ~ VS_TEST, value.var = "VS_RES_R")
+  vs2 <- dcast(vs1, CLIENTID + VS_DAT ~ VS_TEST, value.var = "VS_RES_R")
 
   return(vs2)
 }
 
 
-# get the summary statistics
+#' @title create the demographics data.
+#' @param dm the dm data set
+#' @param ex the ex data set
+#' @param vs the vs data set
+#' @param inlcuded the included data set created by \code{new_create_included}
+#' @return a data frame
+#' @export
+#' @seealso \code{\link{new_create_included}}
 
-get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRUE){
+create_dem <- function(dm, ex, vs, included){
   
-  var_col <- which( names(data)== var)
-  var_attrib <- is.numeric(as.vector(data[, var_col]))
+  vsdm_1 <-find_race_age(dm, ex) %>% arrange(CLIENTID)
+  vsdm_2 <- weight_height_bmi(vs) %>% arrange(CLIENTID)
   
-  if(!var_attrib){   # if it's not numerical, treate it as categorical 
-    
-    result1 <- as.data.frame(ftable(data %>% select_(var, group))) %>% 
-       spread_(group, "Freq") %>% mutate(trait = toupper(var))
-    names(result1)[1] <- "type"
-
-  }
-  else{  # if it's numerical 
-    result <- data %>% select_(var, group) %>% 
-                  group_by_(group) %>% 
-                  summarise_(N = interp(~sum(val >0, na.rm = na.rm), val = as.name(var)), 
-                             MEAN = interp(~mean(val, na.rm = na.rm), val = as.name(var)),
-                             SD = interp(~sd(val, na.rm = na.rm), val = as.name(var)), 
-                             MINIMUM = interp(~min(val, na.rm = na.rm), val= as.name(var)), 
-                             MEDIAN = interp(~median(val, na.rm = na.rm), val = as.name(var)), 
-                             MAXIMUM = interp(~max(val, na.rm= na.rm), val =as.name(var)))
-    
-    result1 <- result %>% melt(id = group, variable.name = "type") %>%
-              spread_(group, "value")  %>%  mutate(trait = var)
-  }
+  vsdm <- inner_join(vsdm_1, vsdm_2 , by = "CLIENTID")  # combine race, ethnicity with BMI HEIGHT, WEIGHT
+  vsdm <- inner_join(vsdm %>% arrange(CLIENTID),    # get the SEQ info
+                     included %>% select(CLIENTID, SEQ), by = "CLIENTID")
+  return(vsdm)
   
-  return(result1)
 }
 
 
 #' Summarize the demographic data
 #'
 #' @title demographic summary.
-#' @param dm the dm data set
-#' @param ex the ex data set
-#' @param vs the vs data set
-#' @param inlcuded the included data set created by \code{new_create_included}
+#' @param dmt the data set created by \code{create_dem}.
 #' @param group which variable name would be used to calculate summary statistics? 
 #' @param na.rm  should missing values be included?  \code{TRUE} by default.
 #' @return a data frame
 #' @export
-#' @seealso \code{\link{new_create_included}}
+#' @examples 
+#' included <- new_create_included(ex, dm, cr, ds)
+#' dmt <- create_dem(dm, ex, vs, included)
+#' summary_dem(dmt, group = "SEQ")   # the summary by group
+#' summary_dem(dmt, group = "SPONSOR")  # to get the overall summary
+#' @seealso \code{\link{new_create_included}} and \code{\link{create_dem}}
 
 
-dem_summary <- function(dm, ex, vs, included, group = "EX_TRT_C", na.rm = TRUE){
+summary_dem <- function(dmt, group = "EX_TRT_C", na.rm = TRUE){
 
-    vsdm_1 <-find_race(dm, ex) %>% arrange(ptno)
-    vsdm_2 <- weight_height_bmi(vs) %>% arrange(ptno)
-  
-    vsdm <- inner_join(vsdm_1, vsdm_2 , by = "ptno")  # combine race, ethnicity with BMI HEIGHT, WEIGHT
-    vsdm <- inner_join(vsdm %>% arrange(CLIENTID),    # get the SEQ info
-                     included %>% select(CLIENTID, SEQ), by = "CLIENTID")
-  
+   vsdm <- dmt
     # for categorical
     race_sum <- get_summary_stats(vsdm, group = group, var = "race", na.rm = na.rm)
     sex_sum <- get_summary_stats(vsdm, group = group, var = "SEX", na.rm = na.rm)
     ethnic_sum <- get_summary_stats(vsdm, group = group, var = "ethnic", na.rm = na.rm)
-    cat_sum <- bind_rows(race_sum, sex_sum, ethnic_sum)
+    cat_sum <- dplyr::bind_rows(race_sum, sex_sum, ethnic_sum)
     
-    t1 <- cat_sum %>% select(trait, type) 
-    t2 <- cat_sum %>% select(-trait, -type)
-    
-    cat_result <- bind_cols(t1, t2)
-    # customize the output
-    # s0 <- cat_sum %>% select(-type) %>% group_by(trait) %>% 
-    #         summarise_each(funs(sum)) %>% ungroup
-    # s1 <- cat_sum %>% select(trait)
-    # s2 <- left_join(s1 %>% arrange(trait), s0 %>% arrange(trait), by = "trait")
-    # m1 <- as.matrix(cat_sum %>% select(-trait, -type))
-    # m2 <- as.matrix(s3 %>% select(-trait))
-    # s4 <- round(m1/m2 , 3)
-    # f1 <- matrix(paste(m1, " (", s4*100, "%)", sep = ""), ncol = ncol(s4), nrow = nrow(s4), byrow = F)
-    # f1 <- data.frame(f1)
-    # names(f1) <- names( cat_sum %>% select(-trait, -type))
-    # cat_result <- bind_cols(cat_sum %>% select(trait, type), f1)
-   
+  
+    # turn the counts to percentages
+    cat_result <- count_percent(cat_sum, var1 = 1, var2 = 3:ncol(cat_sum), digit_keep =3)
+
     # for continuous
     bmi <- get_summary_stats(vsdm, group = group, var = "BMI", na.rm = na.rm)
     height <- get_summary_stats(vsdm, group = group, var = "HEIGHT", na.rm = na.rm)
     weight <- get_summary_stats(vsdm, group = group, var = "WEIGHT", na.rm = na.rm)
     age <- get_summary_stats(vsdm, group = group, var = "age", na.rm = na.rm)
-    continous_sum <- bind_rows(bmi, height, weight, age)
+    continous_sum <- dplyr::bind_rows(bmi, height, weight, age)
 
     # customize the output
-     p1 <-  continous_sum %>% select(trait, type)
-     p2 <-  continous_sum %>% select(-trait, -type)
-     conti_result <- bind_cols(p1, p2) 
     
-     result <- list(categorical = cat_result, continous = conti_result)
+     result <- list(categorical = cat_result, continous = continous_sum)
 
    return(result)
 }
@@ -194,28 +163,17 @@ dem_summary <- function(dm, ex, vs, included, group = "EX_TRT_C", na.rm = TRUE){
 #' Summarize the demographic data
 #'
 #' @title demographics listing.
-#' @param dm the dm data set
-#' @param ex the ex data set
-#' @param vs the vs data set
-#' @param inlcuded the included data set created by \code{new_create_included}
+#' @param dmt the data set created by \code{create_dem}.
 #' @return a data frame
 #' @export
-#' @seealso \code{\link{new_create_included}}
+#' @seealso \code{\link{new_create_included}} and \code{\link{create_dem}}
 #' 
 #' 
-dem_listing <- function(dm, ex, vs, included){
+listing_dem <- function(dmt){
 
-  vsdm_1 <-find_race(dm, ex) %>% arrange(ptno)
-  vsdm_2 <- weight_height_bmi(vs) %>% arrange(ptno)
-  
-  vsdm <- inner_join(vsdm_1, vsdm_2 , by = "ptno")
-  vsdm <- inner_join(vsdm %>% arrange(CLIENTID),    # get the SEQ info
-                     included %>% select(CLIENTID, SEQ), by = "CLIENTID")
-  
- 
- result <- vsdm %>% 
-   select(ptno, BRTHDAT, age, SEX_D, race, ethnic, HEIGHT, WEIGHT, BMI) %>%
-   arrange(ptno)
+ result <- dmt %>% 
+   select(CLIENTID, BRTHDAT, age, SEX_D, race, ethnic, HEIGHT, WEIGHT, BMI) %>%
+   arrange(CLIENTID)
 
   return(result)
 }

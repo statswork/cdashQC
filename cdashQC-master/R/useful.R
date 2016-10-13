@@ -1,9 +1,14 @@
 
 
+
+
+
 ##########################################################################################
 #                                   USEFUL FUNCTIONS
 #
 ##########################################################################################
+
+
 # read as many data sets as needed.
 #
 # @title race and ethnicity indicator, age.
@@ -145,6 +150,10 @@ flg_var <- function(data, thresh, prefix = "flg", oor= rep(F, nrow(thresh))){
 #' \item{keep_rows}{a vector of \code{TRUE} (for keeping row) or \code{FALSE} (otherwise)}
 #' \item{keep_rows}{a vector of \code{TRUE} (for keeping column) or \code{FALSE} (otherwise)}
 #' @export
+#' @examples 
+#' data1 <- data.frame(x = rep(c("A", NA, "C"), each = 3), y = NA, z = c(1:3, NA, 5:9) )
+#' keep_non_empty(data1, return_truncated_data = T)   
+#' d1 <- keep_non_empty(data1)
 
 keep_non_empty <- function(data, pattern = NA, return_truncated_data = F){
 
@@ -253,4 +262,113 @@ create_phour <- function(data){
   return(data)
   
 }
+
+
+
+
+
+
+
+# get the summary statistics
+#' @title get summary statistics
+#' @param data the data 
+#' @param group which column should be the group 
+#' @param var which columns are used to summarize
+#' @param na.rm should missing value be removed? \code{TRUE} by default.
+#' @return a data frame
+#' @export 
+#' @examples 
+#' SEQ = rep(c("A", "B", "C"), 3); subtype = sample(c("ONE", "TWO", "THREE"), 9, replace = TRUE)
+#' data <- data.frame(SEQ, subtype, BMI = rnorm(9, 25, 4), HEIGHT = rnorm(9, 175,3)) 
+#' get_summary_stats(data, group = "SEQ", var = "subtype")
+#' get_summary_stats(data, group = "SEQ", var = "BMI")
+
+get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRUE){
+
+  var_col <- which( names(data)== var)
+  var_attrib <- is.numeric(as.vector(data[, var_col]))
+  
+  if(!var_attrib){   # if it's not numerical, treate it as categorical 
+    
+    result <- as.data.frame(ftable(data %>% select_(var, group))) %>% 
+      spread_(group, "Freq") %>% mutate(trait = toupper(var))
+    names(result)[1] <- "type"
+    
+    t1 <- result %>% select(trait, type) 
+    t2 <- result %>% select(-trait, -type)
+    
+    result1 <- bind_cols(t1, t2)
+  }
+  else{  # if it's numerical 
+    result <- data %>% select_(var, group) %>% 
+      group_by_(group) %>% 
+      summarise_(N = interp(~sum(val >0, na.rm = na.rm), val = as.name(var)), 
+                 MEAN = interp(~mean(val, na.rm = na.rm), val = as.name(var)),
+                 SD = interp(~sd(val, na.rm = na.rm), val = as.name(var)), 
+                 MINIMUM = interp(~min(val, na.rm = na.rm), val= as.name(var)), 
+                 MEDIAN = interp(~median(val, na.rm = na.rm), val = as.name(var)), 
+                 MAXIMUM = interp(~max(val, na.rm= na.rm), val =as.name(var)))
+    
+    result0 <- result %>% melt(id = group, variable.name = "type") %>%
+      spread_(group, "value")  %>%  mutate(trait = var)
+    
+    p1 <-  result0 %>% select(trait, type)
+    p2 <-  result0 %>% select(-trait, -type)
+    result1 <- bind_cols(p1, p2) 
+    
+  }
+  
+  return(result1)
+}
+
+
+#' count to percent
+#' 
+#' @title add percentage to a frequency table
+#' @param data the data should contain at least 2 columns
+#' @param var1 which column should be the group 
+#' @param var2 which columns are used to calculate percentage (could be a vector)
+#' @param digit_keep how many digits should be kept. 
+#' @return a data frame
+#' @export
+#' @examples 
+#' trait = rep(c("A", "B", "C"), 3); subtype = paste(trait, rep(1:3, each=3), sep = "")
+#' data <- data.frame(trait, subtype, count1 = rpois(9, 5), count2 = rpois(9, 10)) 
+#' count_percent(data, var1= 1, var2 = 3:4)
+#' 
+#' r1 <- get_summary_stats(eg, group = "PERIOD", var = "EG_TEST")
+#' count_percent(r1, var1 = 1, var2 = 3:5)
+count_percent <- function(data, var1, var2, digit_keep = 3){
+
+  data <- data[order(data[, var1]), ] # sort by the group variable 
+  trait <- unique(data[, var1] )
+  ntrait <- length(trait)
+  result <- data.frame(matrix(NA, nrow = 0, ncol=length(var2))) 
+  names(result) <- names(data)[var2]
+  
+  for ( i in 1:ntrait){
+    if (length(var2) > 1){
+      p1 <- as.matrix(data[data[, var1]==trait[i], var2])
+      pct <- sweep(p1, 2, colSums(p1), "/")   # convert to percentage
+      ctpct <- paste(p1, " (", round(pct, digit_keep)*100, "%)", sep = "")
+      ctpct <- data.frame(matrix(ctpct, nrow=nrow(p1), ncol= ncol(p1), byrow = F))
+    }
+    else {
+      p1 <- as.vector(data[data[, var1]==trait[i], var2])
+      pct <- p1/sum(p1)
+      ctpct <- paste(p1, " (", round(pct, digit_keep)*100, "%)", sep = "")
+      ctpct <- data.frame(ctpct)
+    }
+    names(ctpct) <- names(data)[var2]
+    result <- rbind(result, ctpct)
+  }
+
+  r1 <- as.data.frame(data[, -var2])
+  names(r1) <- names(data)[-var2]
+  
+  result1 <- dplyr::bind_cols(r1, result)
+  return(result1)
+}
+
+
 

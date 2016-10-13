@@ -21,4 +21,9 @@ a data frame with empty rows and empty columns removed,  or a list containing th
 \description{
 remove empty rows and empty columns of a data set
 }
+\examples{
+data1 <- data.frame(x = rep(c("A", NA, "C"), each = 3), y = NA, z = c(1:3, NA, 5:9) )
+keep_non_empty(data1, return_truncated_data = T)   
+d1 <- keep_non_empty(data1)
+}
 

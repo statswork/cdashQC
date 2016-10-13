@@ -17,4 +17,14 @@ a data frame where by-subject baseline hour is determined.
 \description{
 find the baseline hour for each test category
 }
+\examples{
+# the following two will give you exactly the same result
+r1 <- find_base_phour(vs)
+r2 <- find_base_phour(vs, var_identifier = "VS_TEST")
+
+# If you want to find baseline hours for eg, the following two methods are equivalent
+r3 <- find_base_phour(eg)
+r4 <- find_base_phour(eg, var_identifier = "EG_TEST")
+
+}
 

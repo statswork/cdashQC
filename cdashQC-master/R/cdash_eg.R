@@ -124,6 +124,12 @@ replicate_eg <- function(eg, reps= 3){
 #' @param rm_row a vector of integers specifying which rows should be removed from the dirty data.
 #' @return the cleaned replicates
 #' @export
+#' @examples
+#' eg2 <- replicate_eg(eg, reps = 3) # step 1: find the triplicates
+#' eg_prob <- eg2$data_dirty         # need manual check
+#' # the following rows should be removed
+#' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
+#' eg3 <- replicate_clean(eg2, rows_removed)
 #' @seealso \code{\link{replicate_eg}}
 
 
@@ -155,6 +161,13 @@ replicate_clean <- function(data, rm_row = NULL){
 #' @param prefix give a prefix to \code{var} so the names are changed after calculating the averages
 #' @return the averages
 #' @export
+#' @examples
+#' eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
+#' eg_prob <- eg2$data_dirty         # need manual check
+#' # the following rows should be removed
+#' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
+#' eg3 <- replicate_clean(eg2, rows_removed)
+#' ave <- replicate_average(eg3, prefix = "Ave")
 #' @seealso \code{\link{replicate_clean}}
 
 replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), prefix= "Base"){
@@ -180,6 +193,13 @@ replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), pr
 #' @param data  An object returned from \code{replicate_clean}
 #' @param var the variables used to do the calculation
 #' @return a data frame
+#' @examples
+#' eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
+#' eg_prob <- eg2$data_dirty         # need manual check
+#' # the following rows should be removed
+#' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
+#' eg3 <- replicate_clean(eg2, rows_removed)
+#' eg_change <- change_from_base(eg3, var = c("HR", "PR", "QRS", "QT", "QTCF"))
 #' @export
 #' @seealso \code{\link{replicate_clean}}  
 #' @seealso \code{\link{replicate_eg}}

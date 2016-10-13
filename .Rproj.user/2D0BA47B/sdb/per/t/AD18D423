@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "\n##########################################################################################\n#                                     PACKAGES USED\n#\n##########################################################################################\n\n\nlibrary(haven)  ## Read SAS data, a package from Hadley\nlibrary(dplyr)  # data manipulation tools\nlibrary(reshape2) # data manipulation tools\nlibrary(knitr)    # output\nlibrary(rmarkdown)  # output\nlibrary(lubridate)  # date, time and time span\nlibrary(ggplot2)    # plot\nlibrary(tidyr)      # tidy data\nlibrary(lazyeval)  \nlibrary(cdashQC)    # package\nlibrary(QCdata)     # example data sets of CA19379\n\n\n##########################################################################################\n#                                   FUNCTIONS LOADED\n#\n##########################################################################################\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/cdashQC/R/cdash_dem.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_ae.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_eg.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_vs.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_con.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_lab_shift.R\")\n# source(\"Y:/development/users/Zhuob01/R-template/cdash/R/cdash_lab_oor.R\")\n\n",
+    "created" : 1476382312495.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "665889420",
+    "id" : "AD18D423",
+    "lastKnownWriteTime" : 1476382377,
+    "last_content_update" : 1476382377899,
+    "path" : "~/cdashQC/setup.R",
+    "project_path" : "setup.R",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
