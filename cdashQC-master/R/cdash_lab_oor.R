@@ -400,10 +400,10 @@ print_by_block <- function(data, col_label = names(data),  cat = "UA",
 #' @param digit_keep  the digit kept in the output. see \code{\link[knitr]{kable()}} for more details
 #' @export
 #' @examples
-#' lab_oor(lb_cq, ex, var_per_block = 6, digit_keep =3)
+#' listing_lab_oor(lb_cq, ex, var_per_block = 6, digit_keep =3)
 
 
-lab_oor <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2){
+listing_lab_oor <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2){
   
   laborig <- create_laborig(lb_cq)
   cat_all <- unique(laborig$LB_CAT)  # how many LAB_CAT

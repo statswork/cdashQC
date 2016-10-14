@@ -19,20 +19,6 @@ negative_hour <- function(temp1){
   data.frame(testc)
 }
 
-### find the name of the test code: it should end with var_identifier. 
-
-find_test <- function(data, var_identifier = "_TEST"){
-  # this piece of code detects which variable name should be the variable name of tests
-  short_code <- c("EG", "VS", "LB")
-  index <- rep(F, length(short_code))
-  for (i in 1:length(short_code)){
-    index[i] <- any(grepl(paste(short_code[i], "_", sep = ""), names(data)))
-  }
-  if (sum(index)>1) stop("Name conflict!!")
-  # keep track of the original name
-  complete_identifier <- paste(short_code[index], var_identifier, sep = "")
-  return(complete_identifier)
-}
 
 
 # find base line for the test
@@ -47,18 +33,18 @@ find_test <- function(data, var_identifier = "_TEST"){
 #' @export
 #' @examples 
 #' # the following two will give you exactly the same result
-#' r1 <- find_base_phour(vs)
-#' r2 <- find_base_phour(vs, var_identifier = "VS_TEST")
+#' r1 <- guess_base_phour(vs)
+#' r2 <- guess_base_phour(vs, var_identifier = "VS_TEST")
 #' 
 #' # If you want to find baseline hours for eg, the following two methods are equivalent
-#' r3 <- find_base_phour(eg)
-#' r4 <- find_base_phour(eg, var_identifier = "EG_TEST")
+#' r3 <- guess_base_phour(eg)
+#' r4 <- guess_base_phour(eg, var_identifier = "EG_TEST")
 #' 
 
-find_base_phour <- function(data, var_identifier = "_TEST"){
+guess_base_phour <- function(data, var_identifier = "_TEST"){
   
   # find the corresponding variable name of the test
- complete_identifier <- find_test(data, var_identifier)
+ complete_identifier <- guess_test(data, var_identifier)
 
   
   sort_via <- which(names(data) == complete_identifier)
@@ -90,10 +76,12 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
           mutate(status= "BASELINE")
         
   baseline_hour <- bind_rows(baseline1, baseline2)
+  
+  baseline_hour <- baseline_hour %>% ungroup() %>% arrange(CLIENTID, TEST_CODE, PERIOD, PHOUR)
   temp_name <- which(names(baseline_hour) == "TEST_CODE")
   names(baseline_hour)[temp_name] <- complete_identifier  # change the code name to its original name
   
-  dat <- baseline_hour %>% ungroup() %>% arrange(CLIENTID, PERIOD, PHOUR)
+  dat <- baseline_hour 
   return(dat)
 }
 
@@ -107,7 +95,7 @@ find_base_phour <- function(data, var_identifier = "_TEST"){
 #' @param var_identifier a string that can be used to identify the variable name e.g.(\code{VS_TEST, EG_TEST, LB_TEST})
 #' @return a data frame with an extra column \code{status} whose value could be one of \code{BASELINE}, \code{POSTDOSE} and \code{PREDOSE (NOT BASELINE)} 
 #' @export
-#' @seealso \code{\link{find_base_hour}}
+#' @seealso \code{\link{guess_base_phour}}
 
 
 create_baseline <- function(data, var_identifier = "_TEST"){
@@ -115,7 +103,7 @@ create_baseline <- function(data, var_identifier = "_TEST"){
   data <- create_phour(data)
   
   # find the baseline hours for each test category
-  basehour <- find_base_phour(data, var_identifier)
+  basehour <- guess_base_phour(data, var_identifier)
   var_sort <- names(basehour)[!names(basehour) %in% c("status")]  # sort by these variables
   
   # merge to the original data to create an extra column showing whether it's baseline or not.

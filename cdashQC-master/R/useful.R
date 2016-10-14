@@ -297,7 +297,8 @@ get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRU
     t1 <- result %>% select(trait, type) 
     t2 <- result %>% select(-trait, -type)
     
-    result1 <- bind_cols(t1, t2)
+    result1 <- bind_cols(t1, t2) %>% mutate_if(is.factor, as.character)
+    
   }
   else{  # if it's numerical 
     result <- data %>% select_(var, group) %>% 

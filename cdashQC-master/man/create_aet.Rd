@@ -11,9 +11,9 @@ create_aet(ae, ex, included, improv = 99)
 
 \item{ex}{the dataset ex read from sas}
 
-\item{included}{the dataset included from sas, can be created using \code{new_create_included()}}
+\item{included}{the dataset included from sas, can be created using \code{create_included()}}
 
-\item{improv}{the same argument as the sas macro \code{createaet()}}
+\item{improv}{the same argument as the sas macro \code{createaet}}
 }
 \value{
 aet the data

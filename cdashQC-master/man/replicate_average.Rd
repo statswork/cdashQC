@@ -21,7 +21,7 @@ the averages
 Get the averages of the replicates
 }
 \examples{
-eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
+eg2 <- replicate_data(eg) # find the triplicates
 eg_prob <- eg2$data_dirty         # need manual check
 # the following rows should be removed
 rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)

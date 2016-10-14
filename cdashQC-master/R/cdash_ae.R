@@ -3,8 +3,8 @@
 #' @title do what createaet does.
 #' @param ae  the dataset ae read from sas
 #' @param ex  the dataset ex read from sas
-#' @param included  the dataset included from sas, can be created using \code{new_create_included()}
-#' @param improv the same argument as the sas macro \code{createaet()}
+#' @param included  the dataset included from sas, can be created using \code{create_included()}
+#' @param improv the same argument as the sas macro \code{createaet}
 #' @return aet the data
 #' @export
 #'
@@ -121,7 +121,7 @@ listing_ae <- function(aet, type = 1){
 # #' ae1
 # #' 
 # #' @title Create Adverse event list.
-# #' @param aet  the dataset created by \code{create_aet()}
+# #' @param aet  the dataset created by \code{create_aet}
 # #' @return a data frame
 # #' @export
 # #' @seealso \code{\link{create_aet}}
@@ -144,7 +144,7 @@ ae1 <- function(aet){
 # #' ae2
 # #'
 # #' @title list Adverse Envent 2.
-# #' @param aet the dataset created by \code{create_aet()}
+# #' @param aet the dataset created by \code{create_aet}
 # #' @return a data frame 
 # #' @export
 # #' @seealso \code{\link{create_aet}}

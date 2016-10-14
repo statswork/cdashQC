@@ -9,7 +9,7 @@ create_lb_cq(lb_cq, included, ex)
 \arguments{
 \item{lb_cq}{the dataset lb_cq read from sas}
 
-\item{included}{the dataset created by \code{new_create_included()}. This is the same as the data "included" from sas}
+\item{included}{the dataset created by \code{create_included()}. This is the same as the data "included" from sas}
 
 \item{ex}{the dataset ex read from sas}
 }
@@ -20,6 +20,6 @@ a data frame
 Clean the lb_cq data
 }
 \seealso{
-\code{\link{new_create_included}}
+\code{\link{create_included}}
 }
 

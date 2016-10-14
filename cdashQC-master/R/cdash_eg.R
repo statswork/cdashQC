@@ -43,115 +43,6 @@ create_eg <- function(eg){
 
 
 
-
-#' get the replicates for each protocol hour (PHOUR)
-#' 
-#' @title get the replicates for eg data.
-#' @param eg the data set eg.
-#' @param reps  how many replicates will be measured for each protocol hour. 
-#' @return  a list 
-#'  \item{data_clean}{the subjects containing correct number of resplicates}
-#'  \item{data_dirty}{the subjects that have different number of replicates than desired}
-#' @export
-#' @seealso \code{\link{create_eg}}
-#' 
-
-replicate_eg <- function(eg, reps= 3){
-    
-    eg1 <- create_eg(eg)             # transpose the data
-    eg2 <- create_baseline(eg)       # label the baselines
-    
-    # merge by PHOUR
-    bl <- eg2 %>% filter(trimws(EG_TEST) != "OVERALL INTERPRETATION") %>%
-                  select(CLIENTID, PERIOD, PHOUR, status) %>% 
-                  arrange(CLIENTID, PERIOD, PHOUR) %>% 
-                  distinct()
-    
-    # ts <- eg2 %>% filter(! status %in% c("BASELINE", "POSTDOSE")) %>% select(CLIENTID, PHOUR, DAY, HOUR, EG_TEST, status)
-   
-    # then merge choose_hour with eg1 data to get the baseline (or postdose) measurement
-    eg3 <- left_join(eg1 %>% arrange(CLIENTID, PERIOD, PHOUR), 
-                     bl,  by = c("CLIENTID", "PERIOD", "PHOUR")) %>%
-                filter(status == "BASELINE" | status == "POSTDOSE")  # only interested in baseline and postdose
-
-  # check whether each time point has correct replicate numbers
-  choose_hour <- bl %>% filter(status == "BASELINE" | status == "POSTDOSE") %>% 
-          select(CLIENTID, PERIOD, PHOUR)
-  phour_tab <- as.data.frame(ftable(choose_hour ));
-  phour_tab$Freq <- phour_tab$Freq*reps
-  
-  obs_hour <- eg3 %>% select(CLIENTID, PERIOD, PHOUR)
-  data_tab <- as.data.frame(ftable(obs_hour))
-  # these are the subjects having issue with measurements
-  phour_tab <- phour_tab %>% arrange(CLIENTID, PERIOD, PHOUR)
-  data_tab <- data_tab %>% arrange(CLIENTID, PERIOD, PHOUR)
-
-  prob_index <- which(phour_tab != data_tab, arr.ind = T)
-  
-  id_clean <- rep(T, nrow(eg3))  # by default, choose all rows
-  
-  # if the index matrix is not empty, then the corresponding subject has measurement issues
-  if(nrow(prob_index) > 0 ){
-    subject_id <- data_tab[prob_index[, 1], 1]
-    nreps <- data_tab[prob_index[, 1], 4]
-    nper <- data_tab[prob_index[, 1], 2]
-    nphour <- data_tab[prob_index[, 1], 3]
-    message("WARNING: number of replicates for each protocol hour should be ", reps, "\n", sep = "")
-    for (i in 1:length(subject_id)){
-      message("subject ", trimws(subject_id[i]), " has ", nreps[i], " measurements at ", 
-              nphour[i], " PERIOD ", nper[i], sep = "")
-      dirty_obs <- which(eg3$CLIENTID == subject_id[i] & eg3$PERIOD == nper[i] &
-                           eg3$PHOUR == nphour[i])
-      id_clean[dirty_obs] <- F  # these rows have replicate issues
-    }
-  }
-  
-  data_clean <- eg3[id_clean, ]
-  data_dirty <- eg3[!id_clean, ]
-  rownames(data_dirty) <- 1:nrow(data_dirty)
-  
-  result <- list(data_clean = data_clean, data_dirty=data_dirty)
-  return(result)
-  
-}
-
-
-## after checking the data_dirty data, need to decide which rows to be used as replicates
-#' get cleaned replicates 
-#' 
-#' @title get the cleaned replicates by combining the "clean" data and "dirty" data
-#' @param data  an object returned from \code{replicate_eg}
-#' @param rm_row a vector of integers specifying which rows should be removed from the dirty data.
-#' @return the cleaned replicates
-#' @export
-#' @examples
-#' eg2 <- replicate_eg(eg, reps = 3) # step 1: find the triplicates
-#' eg_prob <- eg2$data_dirty         # need manual check
-#' # the following rows should be removed
-#' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
-#' eg3 <- replicate_clean(eg2, rows_removed)
-#' @seealso \code{\link{replicate_eg}}
-
-
-replicate_clean <- function(data, rm_row = NULL){
-  
-  data_clean <- data$data_clean
-  data_dirty <- data$data_dirty
-  
-  if(nrow(data_dirty) == 0){return(data_clean)}
-  else {
-    if(is.null(rm_row)){
-      stop("there are issues with replicates. You must specify which rows of data_dirty to be removed")
-    }
-    data_keep <- data_dirty[-rm_row, ]
-    
-    data_clean_new <- bind_rows(data_clean, data_keep) %>%
-      arrange(CLIENTID, PERIOD, HOUR)
-  }
-  
-}
-
-
 ## By now you should have collected all the replicates for each PHOUR  correctly
 #' Get the averages of the replicates
 #' 
@@ -162,7 +53,7 @@ replicate_clean <- function(data, rm_row = NULL){
 #' @return the averages
 #' @export
 #' @examples
-#' eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
+#' eg2 <- replicate_data(eg) # find the triplicates
 #' eg_prob <- eg2$data_dirty         # need manual check
 #' # the following rows should be removed
 #' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
@@ -194,15 +85,20 @@ replicate_average <- function(data, var = c("HR", "PR", "QRS", "QT", "QTCF"), pr
 #' @param var the variables used to do the calculation
 #' @return a data frame
 #' @examples
-#' eg2 <- replicate_eg(eg, reps = 3) # find the triplicates
-#' eg_prob <- eg2$data_dirty         # need manual check
+#' eg2 <- replicate_data(eg) # find the triplicates
+#' eg_prob <- eg2$data_dirty             # need manual check
 #' # the following rows should be removed
 #' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
 #' eg3 <- replicate_clean(eg2, rows_removed)
-#' eg_change <- change_from_base(eg3, var = c("HR", "PR", "QRS", "QT", "QTCF"))
+#' baseline <- create_baseline(eg) %>%          # get the baseline hours
+#'                  select(CLIENTID, PERIOD, PHOUR, status) %>% distinct()          
+#' eg4 <- left_join(eg3 %>% arrange(CLIENTID, PERIOD, PHOUR), 
+#'                  baseline %>% arrange(CLIENTID, PERIOD, PHOUR), 
+#'                  by = c("CLIENTID", "PERIOD", "PHOUR"))
+#' eg_change <- change_from_base(eg4, var = c("HR", "PR", "QRS", "QT", "QTCF"))
 #' @export
 #' @seealso \code{\link{replicate_clean}}  
-#' @seealso \code{\link{replicate_eg}}
+#' @seealso \code{\link{replicate_data}}
 #' @seealso \code{\link{create_eg}}
 #' 
 

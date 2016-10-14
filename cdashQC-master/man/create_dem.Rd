@@ -13,12 +13,12 @@ create_dem(dm, ex, vs, included)
 
 \item{vs}{the vs data set}
 
-\item{inlcuded}{the included data set created by \code{new_create_included}}
+\item{inlcuded}{the included data set created by \code{create_included}}
 }
 \value{
 a data frame
 }
 \seealso{
-\code{\link{new_create_included}}
+\code{\link{create_included}}
 }
 

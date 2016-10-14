@@ -16,6 +16,6 @@ a data frame
 Summarize the demographic data
 }
 \seealso{
-\code{\link{new_create_included}} and \code{\link{create_dem}}
+\code{\link{create_included}} and \code{\link{create_dem}}
 }
 

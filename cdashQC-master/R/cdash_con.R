@@ -13,7 +13,7 @@
 #' @export
 #' 
 
-concom <- function(cm){
+listing_concom <- function(cm){
   
   id1 <- cm$CM_TRT == "" & toupper(cm$CM_YN) %in% c("N", "NO")
   cm$CM_TRT[id1] <- "NONE"

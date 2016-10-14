@@ -114,7 +114,7 @@ create_dis <- function(ds){
 }
 
 
-#' new_create_included.
+#' create_included.
 #'
 #' @title do what new_create_included does.
 #' @param ex  the dataset ex read from sas
@@ -126,7 +126,7 @@ create_dis <- function(ds){
 #'
 #'
 
-new_create_included <- function(ex, dm, cr, ds){
+create_included <- function(ex, dm, cr, ds){
   
   dem <- dm %>% mutate(ptno = as.numeric(CLIENTID)) %>% select(ptno, SCRID, CLIENTID)
   seqtest <- create_seqtest(ex)

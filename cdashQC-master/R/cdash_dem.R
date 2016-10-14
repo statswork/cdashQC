@@ -12,7 +12,7 @@
 # #' \item{age}{Age calculated from start date of treatment}
 
 
-find_race_age <- function(dm, ex){
+guess_race_age <- function(dm, ex){
   sort_col <- sort(names(dm))
   dm1 <- data.frame(dm[, sort_col])
 
@@ -96,14 +96,14 @@ weight_height_bmi <- function(vs){
 #' @param dm the dm data set
 #' @param ex the ex data set
 #' @param vs the vs data set
-#' @param inlcuded the included data set created by \code{new_create_included}
+#' @param inlcuded the included data set created by \code{create_included}
 #' @return a data frame
 #' @export
-#' @seealso \code{\link{new_create_included}}
+#' @seealso \code{\link{create_included}}
 
 create_dem <- function(dm, ex, vs, included){
   
-  vsdm_1 <-find_race_age(dm, ex) %>% arrange(CLIENTID)
+  vsdm_1 <-guess_race_age(dm, ex) %>% arrange(CLIENTID)
   vsdm_2 <- weight_height_bmi(vs) %>% arrange(CLIENTID)
   
   vsdm <- inner_join(vsdm_1, vsdm_2 , by = "CLIENTID")  # combine race, ethnicity with BMI HEIGHT, WEIGHT
@@ -123,11 +123,11 @@ create_dem <- function(dm, ex, vs, included){
 #' @return a data frame
 #' @export
 #' @examples 
-#' included <- new_create_included(ex, dm, cr, ds)
+#' included <- create_included(ex, dm, cr, ds)
 #' dmt <- create_dem(dm, ex, vs, included)
 #' summary_dem(dmt, group = "SEQ")   # the summary by group
 #' summary_dem(dmt, group = "SPONSOR")  # to get the overall summary
-#' @seealso \code{\link{new_create_included}} and \code{\link{create_dem}}
+#' @seealso \code{\link{create_included}} and \code{\link{create_dem}}
 
 
 summary_dem <- function(dmt, group = "EX_TRT_C", na.rm = TRUE){
@@ -166,7 +166,7 @@ summary_dem <- function(dmt, group = "EX_TRT_C", na.rm = TRUE){
 #' @param dmt the data set created by \code{create_dem}.
 #' @return a data frame
 #' @export
-#' @seealso \code{\link{new_create_included}} and \code{\link{create_dem}}
+#' @seealso \code{\link{create_included}} and \code{\link{create_dem}}
 #' 
 #' 
 listing_dem <- function(dmt){

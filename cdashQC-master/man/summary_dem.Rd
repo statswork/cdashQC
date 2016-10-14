@@ -20,12 +20,12 @@ a data frame
 Summarize the demographic data
 }
 \examples{
-included <- new_create_included(ex, dm, cr, ds)
+included <- create_included(ex, dm, cr, ds)
 dmt <- create_dem(dm, ex, vs, included)
 summary_dem(dmt, group = "SEQ")   # the summary by group
 summary_dem(dmt, group = "SPONSOR")  # to get the overall summary
 }
 \seealso{
-\code{\link{new_create_included}} and \code{\link{create_dem}}
+\code{\link{create_included}} and \code{\link{create_dem}}
 }
 

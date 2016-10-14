@@ -18,6 +18,6 @@ a data frame with an extra column \code{status} whose value could be one of \cod
 create an extra column inidcating whether the current row should be considered as baseline.
 }
 \seealso{
-\code{\link{find_base_hour}}
+\code{\link{guess_base_phour}}
 }
 
