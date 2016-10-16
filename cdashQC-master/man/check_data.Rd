@@ -2,12 +2,12 @@
 % Please edit documentation in R/check_data_quality.R
 \name{check_data}
 \alias{check_data}
-\title{check the quality of data and issue a message if there's issue}
+\title{check the replicates and issue a message if there's issue}
 \usage{
 check_data(data, reps = NULL, printed = TRUE)
 }
 \arguments{
-\item{data}{currently support \code{eg}}
+\item{data}{currently support \code{eg} and \code{vs}}
 
 \item{reps}{the number of replicates planned. (should be tabled by TESTCODE, PERIOD and PHOUR). If \code{NULL}, \code{guess_reps} will be invoked to guess the number of replicates.}
 

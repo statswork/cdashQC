@@ -1,6 +1,42 @@
 ### old functions
 
 
+# #' Check the possible issues with vital signs data 
+# #'
+# #' @title check for possile missing or recheck measurements.
+# #' @param vs The dataset vs.
+# #' @return a data frame containing observations with possible issues. 
+# #' @export
+# #'
+
+check_vs_old <- function(vs){
+  vs <- create_phour(vs)
+  
+  vs0 <- vs %>% select(PERIOD, PHOUR, CLIENTID)
+  
+  vs_table <- as.data.frame(ftable(vs0)) %>% arrange(PERIOD, PHOUR, CLIENTID)
+  find_mode <- vs_table %>% group_by(PERIOD, PHOUR) %>%
+    summarize_each(funs(calc_mode), Freq) %>% 
+    mutate(mode = Freq) %>% select(-Freq)
+  
+  vs_table1 <- inner_join(vs_table, 
+                          find_mode %>% ungroup() %>% arrange(PERIOD, PHOUR), 
+                          by = c("PERIOD", "PHOUR"))
+  
+  vs_problem <- vs_table1 %>% filter(Freq != mode) %>% 
+    mutate(status = ifelse(Freq < mode, "Missing Values", "May contain Rechecks  or Measurement Errors")) %>%
+    mutate_if(is.factor, as.character)        # if the variable is a factor, change it to character
+  
+  useful_info <- vs %>% select(PERIOD, PHOUR, CLIENTID, VS_DAT,VS_TIM, DAY, HOUR, VS_TEST, VS_ORRES, VS_COM, VS_RCK) 
+  
+  vs_problem2 <- inner_join(vs_problem %>% arrange(PERIOD, PHOUR, CLIENTID),
+                            useful_info %>% arrange(PERIOD, PHOUR, CLIENTID), 
+                            by = c("PERIOD", "PHOUR", "CLIENTID"))
+  return(vs_problem2)
+}
+
+
+
 
 # #' Check the possible issues with ECG data
 # #' 

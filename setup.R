@@ -30,3 +30,14 @@ library(QCdata)     # example data sets of CA19379
 # source("Y:/development/users/Zhuob01/R-template/cdash/R/cdash_lab_shift.R")
 # source("Y:/development/users/Zhuob01/R-template/cdash/R/cdash_lab_oor.R")
 
+###
+library(R.utils)
+
+current_path <- "C:/Users/zhuob01/Documents/cdashQC/cdashQC-master/R/"
+scan_files <- listDirectory(current_path)
+number <- c()
+for (i in 1: length(scan_files)){
+  number[i] <- countLines(paste(current_path, scan_files[i], sep = ""))[1]
+}
+
+print(sum(number))

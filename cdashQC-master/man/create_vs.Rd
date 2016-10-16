@@ -10,7 +10,7 @@ create_vs(vs)
 \item{vs}{the dataset dm read from sas}
 }
 \value{
-eg1 the transposed data
+the transposed data
 }
 \description{
 dcast the vs variables

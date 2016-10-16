@@ -2,7 +2,6 @@
 
 export(change_from_base)
 export(check_data)
-export(check_vs)
 export(count_percent)
 export(create_aet)
 export(create_baseline)

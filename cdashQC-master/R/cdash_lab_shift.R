@@ -217,19 +217,3 @@ summary_labshift <- function(lb_cq, included, ex, UA= FALSE){
   return(result3)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
