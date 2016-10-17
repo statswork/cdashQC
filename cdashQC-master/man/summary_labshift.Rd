@@ -4,14 +4,10 @@
 \alias{summary_labshift}
 \title{create the lab shift table.}
 \usage{
-summary_labshift(lb_cq, included, ex, UA = FALSE)
+summary_labshift(laborig, UA = FALSE)
 }
 \arguments{
-\item{lb_cq}{the dataset lb_cq read from sas}
-
-\item{included}{the dataset included from sas (need variable SEQ)}
-
-\item{ex}{the dataset ex read from sas}
+\item{laborig}{the dataset returned by \code{create_lb_cq}.}
 
 \item{UA}{whether to produce shift table for UA (should be done separately)}
 }
@@ -23,8 +19,12 @@ Create the lab shift table.
 }
 \examples{
 included <- create_included(ex, dm, cr, ds)
-others <- labshift(lb_cq, included, ex,  UA=FALSE)  #not urinalysis
-UA <- summary_labshift(lb_cq, included, ex, UA=TRUE)       # UA
+laborig <- create_lb_cq(lb_cq, included, ex)
+others <- labshift(laborig,  UA=FALSE)  #not urinalysis
+UA <- summary_labshift(laborig, UA=TRUE)       # UA
 
+}
+\seealso{
+\code{\link{create_lb_cq}}
 }
 

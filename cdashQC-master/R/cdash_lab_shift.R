@@ -17,7 +17,7 @@
 #' @title prepare data for lab shift table.
 #' @param lb_cq  the dataset lb_cq read from sas
 #' @param ex  the dataset ex read from sas
-#' @param included  the dataset created by \code{create_included()}. This is the same as the data "included" from sas
+#' @param included  the dataset created by \code{create_included}. This is the same as the data "included" from sas
 #' @return a data frame
 #' @export
 #' @seealso \code{\link{create_included}}
@@ -135,24 +135,20 @@ create_lab_postdose <- function(laborig){
 #' Create the lab shift table.
 #'
 #' @title create the lab shift table.
-#' @param lb_cq  the dataset lb_cq read from sas
-#' @param ex  the dataset ex read from sas
-#' @param included  the dataset included from sas (need variable SEQ)
+#' @param laborig  the dataset returned by \code{create_lb_cq}.
 #' @param UA  whether to produce shift table for UA (should be done separately)
 #' @return the shift table
 #' @export
+#' @seealso \code{\link{create_lb_cq}}
 #' @examples 
 #' included <- create_included(ex, dm, cr, ds)
-#' others <- labshift(lb_cq, included, ex,  UA=FALSE)  #not urinalysis
-#' UA <- summary_labshift(lb_cq, included, ex, UA=TRUE)       # UA
+#' laborig <- create_lb_cq(lb_cq, included, ex)
+#' others <- labshift(laborig,  UA=FALSE)  #not urinalysis
+#' UA <- summary_labshift(laborig, UA=TRUE)       # UA
 #'
 
 
-summary_labshift <- function(lb_cq, included, ex, UA= FALSE){
-  
-  # clean the lab data
-  laborig <- create_lb_cq(lb_cq, included, ex)
-  
+summary_labshift <- function(laborig, UA= FALSE){
   
   # get baseline
   baselines <- create_lab_baseline(laborig)
