@@ -1,6 +1,19 @@
 
 ### guess the name of the test code: it should end with var_identifier. 
 
+
+###  
+## 
+#' guess the name of the test code: it should end with var_identifier. 
+#' 
+#' @title guess the name of the test
+#' @param  data  currently support \code{eg} and \code{vs}
+#' @param var_identifier, which columns is the variable for test code names. 
+#' @return the test code
+#' @export
+#' @examples 
+#' guess_test(eg)
+
 guess_test <- function(data, var_identifier = "_TEST"){
  
   short_code <- c("EG", "VS", "LB")
@@ -83,6 +96,7 @@ check_data <- function(data, reps = NULL, printed = TRUE){
  
   if( is.null(reps)) {reps <-  guess_reps(data, var_identifier = "_TEST")}   # if there's no reps specification
   
+  data <- create_phour(data)
   
   # change the test name to TEST_CODE for easy data manipulation.
   original_name <- guess_test(data, var_identifier = "_TEST")
@@ -127,6 +141,7 @@ check_data <- function(data, reps = NULL, printed = TRUE){
                          Freq,sep = ""))
     }
       if (printed){
+        t2 <- t2 %>% arrange(messages)
         for (i in 1:nrow(t2)){ message(t2$messages[i]) }
     }
       

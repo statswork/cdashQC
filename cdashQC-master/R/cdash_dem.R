@@ -1,15 +1,15 @@
 
-# #' create necessary variable for the demographic summary tables and listing.
-# #' 
-# #' @title race and ethnicity indicator, age.
-# #' @param dm  the dataset dm read from sas
-# #' @param ex  the dataset ex read from sas
-# #' @return a data frame with additional columns listed as follows
-# #' \item{race}{the race of the subject}
-# #' \item{ethnic}{has two levels, "NOT HISPANIC OR LATINO" and "HISPANIC OR LATINO".}
-# #' \item{EX_TRT_C}{the treatment groups}
-# #' \item{ptno}{convert CLIENTID to numerical values of subject number}
-# #' \item{age}{Age calculated from start date of treatment}
+#' create necessary variable for the demographic summary tables and listing.
+#'
+#' @title race and ethnicity indicator, age.
+#' @param dm  the dataset dm read from sas
+#' @param ex  the dataset ex read from sas
+#' @return a data frame with additional columns listed as follows
+#' \item{race}{the race of the subject}
+#' \item{ethnic}{has two levels, "NOT HISPANIC OR LATINO" and "HISPANIC OR LATINO".}
+#' \item{EX_TRT_C}{the treatment groups}
+#' \item{ptno}{convert CLIENTID to numerical values of subject number}
+#' \item{age}{Age calculated from start date of treatment}
 
 
 guess_race_age <- function(dm, ex){
@@ -63,12 +63,12 @@ guess_race_age <- function(dm, ex){
 
 
 
-# #' extract BMI, weight and height from vs.sas7bat.
-# #'
-# #' @title read BMI Weight and Height info from Screening stage.
-# #' @param  vs  the vs sas data
-# #' @return a data frame containing BMI, WEIGHT and HEIGHT from admission stage
-# #' @export
+#' extract BMI, weight and height from vs.sas7bat.
+#'
+#' @title read BMI Weight and Height info from Screening stage.
+#' @param  vs  the vs sas data
+#' @return a data frame containing BMI, WEIGHT and HEIGHT from admission stage
+#' @export
 
 weight_height_bmi <- function(vs){
 

@@ -6,3 +6,4 @@ document()
 check()
 build(manual = T)
 install.packages("~/cdashQC/cdashQC_0.1.1.tar.gz", repos = NULL, type = "source")
+

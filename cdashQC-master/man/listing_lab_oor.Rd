@@ -4,7 +4,7 @@
 \alias{listing_lab_oor}
 \title{print OOR values for all LB_CAT}
 \usage{
-listing_lab_oor(lb_cq, ex, var_per_block = 5, digit_keep = 2)
+listing_lab_oor(lb_cq, ex, var_per_block = 5, digit_keep = 2, prt = TRUE)
 }
 \arguments{
 \item{lb_cq}{the dataset lb_cq read from sas}
@@ -14,6 +14,8 @@ listing_lab_oor(lb_cq, ex, var_per_block = 5, digit_keep = 2)
 \item{var_per_block}{how many variables to be shown in each block}
 
 \item{digit_keep}{the digit kept in the output. see \code{\link[knitr]{kable()}} for more details}
+
+\item{prt}{Whether to print the results or not. Default is \code{TRUE}.}
 }
 \description{
 print out the OOR values for all LB_CAT automatically. This function is built on top of customized_lab_rept()

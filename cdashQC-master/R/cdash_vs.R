@@ -40,3 +40,9 @@ create_vs <- function(vs){
   
   return(vs1)
 }
+
+
+
+
+
+

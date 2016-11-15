@@ -312,3 +312,25 @@ count_percent <- function(data, var1, var2, digit_keep = 3){
 
 
 
+
+## round the values if it's numerical 
+
+#' round a data frame if the column is numerical
+#' @title round data frame
+#' @param df the data frame
+#' @param digits how many digits you want to keep
+#' @return a data frame with numerical columns rounded.
+#' @export
+
+round_df <- function(df, digits = 3){
+  
+  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  df[, nums] <- round(df[, nums], digits = digits)
+  return(df)
+  
+}
+
+
+
+
+

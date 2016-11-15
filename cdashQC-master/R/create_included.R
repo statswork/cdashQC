@@ -93,7 +93,9 @@ create_chkseq <- function(dm, cr){
 }
 
 
-create_dis <- function(ds){
+
+## create disposition table
+create_dis <- function(ex, ds){
   med <- ex %>% mutate(ptno = as.numeric(CLIENTID),
                        EX_TRT_C = substr(EX_TRT_C, 4, 4),   # get the treatment lable
                        pern = as.numeric(gsub("A|B|C|D|E|F", "", PERIOD)) # remove A or B or C, ect.  equivalent to compress() in SAS
@@ -105,7 +107,7 @@ create_dis <- function(ds){
   if(ds_ans_exist){
     dis$comp <- ifelse(dis$DS_ANS %in% c("YES", "Y"), "Y", "")
   } else{
-    dis$comp <- ""
+    dis$comp <- ifelse(trimws(toupper(dis$DS_TRM_D)) == "COMPLETED", "Y", "N")
   }
   names(dis)[ncol(dis)] <- paste("comp_", totper, sep = "")
   
@@ -131,7 +133,7 @@ create_included <- function(ex, dm, cr, ds){
   dem <- dm %>% mutate(ptno = as.numeric(CLIENTID)) %>% select(ptno, SCRID, CLIENTID)
   seqtest <- create_seqtest(ex)
   chk_in <- create_chkseq(dm, cr)
-  dis <- create_dis(ds)
+  dis <- create_dis(ex, ds)
   
   seqtest1 <- full_join(seqtest %>% arrange(ptno), 
                         full_join(dem %>% arrange(ptno),
@@ -206,6 +208,12 @@ create_threshold <- function(flagvar, lower = -Inf, upper = Inf,
 
 ## 
 # create protocol hour (PHOUR) if it's not already in the data set. 
+#' Create protocol hour variable if it's not already in the data set.
+#' @title Create protocol hour
+#' @param data either \code{eg}, \code{vs} or \code{lb_cq}
+#' @return the same data set with one more column if Phour is created, otherwise returns the input data.
+#' @export
+
 
 create_phour <- function(data){
   
