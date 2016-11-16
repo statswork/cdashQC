@@ -345,7 +345,7 @@ lab_rept <- function(lb_cq, ex, cat = "UA"){
 
 
 print_by_block <- function(data, col_label = names(data),  cat = "UA", 
-                           var_per_block = 5, digit_keep = 2, prt = TRUE){
+                           var_per_block = 5, digit_keep = 2){
   
   # first, separate the data into two, one for fixed columns (those columns will be the same for all output)
   part1 <- data %>% select(-starts_with( paste(cat, "_", sep = "")))
@@ -357,16 +357,16 @@ print_by_block <- function(data, col_label = names(data),  cat = "UA",
   block <- ceiling(length(cat_name)/var_per_block)  # how blocks are needed
   
   for ( k in 1:block){
-    if(k == block){                        # if this is the last block
-      from1 <- (k-1)*var_per_block + 1
-      to1 <- length(cat_name)
-    }
-    else{         # if this is not the last block
-        from1 <- (k-1)*var_per_block + 1
-        to1 <-  k*var_per_block;
-    }
-      # c(from1, to1)
-      
+        if(k == block){                        # if this is the last block
+          from1 <- (k-1)*var_per_block + 1
+          to1 <- length(cat_name)
+        }
+            else{         # if this is not the last block
+            from1 <- (k-1)*var_per_block + 1
+            to1 <-  k*var_per_block;
+        }
+          # c(from1, to1)
+          
       # get the corresponding code
       test_code <- as.character(cat_name[from1:to1])
       col_to_show <- which(cat_name %in% test_code)
@@ -387,13 +387,11 @@ print_by_block <- function(data, col_label = names(data),  cat = "UA",
       rownames(oor1) <- NULL
       # print out
       
-      if (prt == TRUE) {
+      
         print(kable(oor1, digits =digit_keep, table.attr='class="flat-table"',
                     col.names = col_name, caption = paste(cat, ":block ", k, " of ", block, sep = "")))
         
       }
-      else {return(oor1)}
-    }
     
     
   }
@@ -423,12 +421,15 @@ listing_lab_oor <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2, prt = 
   cat_all <- unique(laborig$LB_CAT)  # how many LAB_CAT
   full_name <- the_code(lb_cq)       # the code with its full name and normal ranges
   
-  
+  result <- list()
+  indcat <- rep(F, length(cat_all))
   for (i in 1: length(cat_all)){
     
     oor <- lab_rept(lb_cq, ex, cat=cat_all[i])  # create the lab oors
     
+
     if(!is.null(oor)){  # if the data is not empty
+      if(prt) {     # if you want to print it out in html
       var1 <- names(oor)   # 
       id1 <- which(grepl(paste(cat_all[i], "_", sep = ""), var1))
       
@@ -439,11 +440,21 @@ listing_lab_oor <- function(lb_cq, ex, var_per_block = 5, digit_keep = 2, prt = 
       # this should give the right name order
       col_name_all <- c(var1[-id1], t2$TTL[order(t2$sorted)] )
       # pass the name to the following function
-      print_by_block(oor, col_label = col_name_all, cat= cat_all[i], 
-                     var_per_block=var_per_block, digit_keep = digit_keep)
+      
+        print_by_block(oor, col_label = col_name_all, cat= cat_all[i], 
+                       var_per_block=var_per_block, digit_keep = digit_keep)
+      }
+      
+      else {   # if you do not want to print, save it as a list.
+        result[[i]] <-  oor
+        indcat[i] <- T
+      }
     }
-  
+    
   }
+  if (!prt){
+    names(result) <- cat_all[indcat]
+    return(result)}
   
 }
 

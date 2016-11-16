@@ -10,7 +10,7 @@ create_eg(eg)
 \item{eg}{the dataset eg read from sas}
 }
 \value{
-eg1 the transposed data
+eg1 data with necessary variables kept for further summarization.
 }
 \description{
 dcast the ecg variables

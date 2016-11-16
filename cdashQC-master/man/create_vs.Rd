@@ -10,7 +10,7 @@ create_vs(vs)
 \item{vs}{the dataset dm read from sas}
 }
 \value{
-the transposed data
+vs data with necessary variables kept for further summarization.
 }
 \description{
 dcast the vs variables

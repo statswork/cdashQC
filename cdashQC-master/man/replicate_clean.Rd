@@ -7,7 +7,7 @@
 replicate_clean(data, rm_row = NULL)
 }
 \arguments{
-\item{data}{an object returned from \code{replicate_eg}}
+\item{data}{an object returned from \code{replicate_data} (works for vs and eg)}
 
 \item{rm_row}{a vector of integers specifying which rows should be removed from the dirty data.}
 }

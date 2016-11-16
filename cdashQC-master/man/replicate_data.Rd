@@ -2,12 +2,12 @@
 % Please edit documentation in R/replicates.R
 \name{replicate_data}
 \alias{replicate_data}
-\title{get the replicates for eg data.}
+\title{get the replicates for eg or vs data.}
 \usage{
 replicate_data(data, reps = NULL)
 }
 \arguments{
-\item{data}{the data set eg.}
+\item{data}{the data set created by \code{\link{create_eg}} (for ecg data) or by  \code{\link{create_vs}} (for vital signs data).}
 
 \item{reps}{specifies the structures of reps. If not specified, \code{guess_resp} will be invoked. Default set to be \code{NULL}.}
 }
@@ -20,6 +20,6 @@ a list
 get the replicates for each protocol hour (PHOUR)
 }
 \seealso{
-\code{\link{create_eg}}, \code{\link{guess_resp}} and  \code{\link{check_data}}
+\code{\link{create_eg}}, \code{\link{guess_resp}} and  \code{\link{replicate_check}}
 }
 
