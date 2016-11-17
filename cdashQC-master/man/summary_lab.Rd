@@ -2,7 +2,7 @@
 % Please edit documentation in R/cdash_lab.R
 \name{summary_lab}
 \alias{summary_lab}
-\title{create the lab shift table.}
+\title{summary statistics for lab shift.}
 \usage{
 summary_lab(laborig, included, digits = 3)
 }

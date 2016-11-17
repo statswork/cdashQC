@@ -222,7 +222,7 @@ summary_labshift <- function(laborig, UA= FALSE){
 
 #' Summarize the lab statistics
 #'
-#' @title create the lab shift table.
+#' @title summary statistics for lab shift.
 #' @param laborig  the dataset returned by \code{create_laborig}.
 #' @param included the dataset created by \code{create_included}. This is the same as the data "included" from sas
 #' @param digits  how many digits should be kept for the final data.
@@ -274,9 +274,11 @@ summary_lab <- function(laborig, included, digits = 3){
   lab3 <- lab2_4 %>%  group_by(LB_CAT, LB_TEST, range, PHOUR, sortvar, SEQ) %>% 
                     summarise(COUNT = n(), 
                               mean = mean(outcome),
-                              sd = sd(outcome), 
+                              sd = sd(outcome),
                               mininum = min(outcome),
+                              q1 = quantile(outcome, probs = 0.25),
                               median = median(outcome), 
+                              q3 = quantile(outcome, probs = 0.75),
                               maximu = max(outcome)) %>%
                     mutate(cv = sd/mean)
   
