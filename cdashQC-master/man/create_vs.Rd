@@ -13,6 +13,6 @@ create_vs(vs)
 vs data with necessary variables kept for further summarization.
 }
 \description{
-dcast the vs variables
+create the vs data
 }
 

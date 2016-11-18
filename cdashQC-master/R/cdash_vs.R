@@ -4,7 +4,7 @@
 ################################################################################################
 
 
-#' dcast the vs variables
+#' create the vs data
 #' 
 #' @title create the vital sign data set.
 #' @param vs  the dataset dm read from sas

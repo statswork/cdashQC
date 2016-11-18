@@ -4,12 +4,10 @@
 \alias{summary_labshift}
 \title{create the lab shift table.}
 \usage{
-summary_labshift(laborig, UA = FALSE)
+summary_labshift(lb_clean)
 }
 \arguments{
-\item{laborig}{the dataset returned by \code{create_labshift}.}
-
-\item{UA}{whether to produce shift table for UA (should be done separately)}
+\item{lb_clean}{the dataset returned by \code{clean_lab}.}
 }
 \value{
 the shift table
@@ -19,12 +17,12 @@ Create the lab shift table.
 }
 \examples{
 included <- create_included(ex, dm, cr, ds)
-laborig <- create_labshift(lb_cq, included, ex)
-others <- summary_labshift(laborig,  UA=FALSE)  #not urinalysis
-UA <- summary_labshift(laborig, UA=TRUE)       # UA
+lab <- create_lab(lb_cq)
+lb_clean <- clean_lab(lab, included, ex)
+lbshift <- summary_labshift(lb_clean)  
 
 }
 \seealso{
-\code{\link{create_labshift}}
+\code{\link{clean_lab}}
 }
 

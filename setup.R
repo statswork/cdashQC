@@ -13,6 +13,7 @@ library(rmarkdown)  # output
 library(lubridate)  # date, time and time span
 library(ggplot2)    # plot
 library(tidyr)      # tidy data
+library(stringr)
 library(lazyeval)  
 library(cdashQC)    # package
 library(QCdata)     # example data sets of CA19379

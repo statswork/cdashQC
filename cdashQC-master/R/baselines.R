@@ -123,7 +123,7 @@ create_baseline <- function(data, var_identifier = "_TEST"){
   
   id1 <- is.na(data1$status) & (is.na(data1$HOUR) | data1$HOUR < 0)
   id2 <- is.na(data1$status) & ( data1$HOUR >= 0)
-  id3 <- toupper(trimws(data1$PERIOD)) == "SCREEN"
+  id3 <- (data1$status != "BASELINE") & (toupper(trimws(data1$PERIOD)) == "SCREEN") 
   
   data1$status[id1] <- "PREDOSE (NOT BASELINE)"
   data1$status[id2] <- "POSTDOSE"

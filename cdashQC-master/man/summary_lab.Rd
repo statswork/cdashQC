@@ -4,12 +4,10 @@
 \alias{summary_lab}
 \title{summary statistics for lab shift.}
 \usage{
-summary_lab(laborig, included, digits = 3)
+summary_lab(lb_clean, digits = 3)
 }
 \arguments{
-\item{laborig}{the dataset returned by \code{create_laborig}.}
-
-\item{included}{the dataset created by \code{create_included}. This is the same as the data "included" from sas}
+\item{lb_clean}{the dataset returned by \code{clean_lab}.}
 
 \item{digits}{how many digits should be kept for the final data.}
 }
@@ -21,11 +19,12 @@ Summarize the lab statistics
 }
 \examples{
 included <- create_included(ex, dm, cr, ds)
-laborig <- create_labshift(lb_cq, included, ex)
-s1 <- summary_lab(laborig, included)  #not urinalysis
+lab <- create_lab(lb_cq)
+lb_clean <- clean_lab(lab, included= included, ex= ex)
+s1 <- summary_lab(clean_lab)  #not urinalysis
 
 }
 \seealso{
-\code{\link{create_laborig}}
+\code{\link{clean_lab}}
 }
 
