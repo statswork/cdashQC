@@ -1,6 +1,6 @@
 Package: cdashQC
 Title:  Quality control for TFLs
-Version: 0.1.1
+Version: 0.1.2
 Depends: R(>= 3.1.1)
 Imports: lubridate(>= 1.6.0), 
          reshape2(>= 1.4.1), 

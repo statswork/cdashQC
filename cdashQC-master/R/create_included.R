@@ -160,52 +160,6 @@ create_included <- function(ex, dm, cr, ds){
 
 ############################### OTHER CREATED FUNCTIONS ##############################################
 
-
-#' create threshold data frame
-#'
-#' @title create threshold table (for flagging variable purpose).
-#' @param flagvar  the variable to be flagged
-#' @param lower   lower bound. Set to be \code{-Inf} if none.
-#' @param upper  upper bound. Set to be \code{Inf} if none.
-#' @param include_lower whether the lower bound should be included, \code{TRUE} by default
-#' @param include_upper whether the upper bound should be included, \code{FALSE} by default
-#' @param flg_label what label will be used to flag the variable
-#' @param add2existing  \code{TRUE} or \code{FALSE}. If \code{TRUE}, must specify thresh.
-#' @param thresh  a data frame with three columns: first column, the variable to be flagged, second column, lower bound (if any); third column, upper bound (if any).
-#' @return a data frame
-#' @export
-#' @examples
-#' a <- create_threshold(flagvar = "QTCF", lower = 0, upper = 20, include_lower = FALSE, include_upper = TRUE,  flg_label = "^")
-#' b <- create_threshold(flagvar = "PR",  upper = 430, flg_label = "*", add2existing = TRUE, thresh = a)
-#' c <- create_threshold(flagvar = "QRs",  lower = 100, flg_label = "%",add2existing = TRUE, thresh = b)
-#' print(a); print(b);print(c);
-
-
-create_threshold <- function(flagvar, lower = -Inf, upper = Inf,
-                             include_lower = T, include_upper = F,
-                             flg_label = "#", add2existing= F, thresh = NULL){
-  if (!add2existing)
-  {
-    thresh1 <- data.frame(variable = flagvar, lower = lower, upper = upper,
-                          include_lower = include_lower,
-                          include_upper = include_upper,
-                          flg_label=flg_label)
-  }
-  else {
-    nx <- nrow(thresh)
-    newthresh <- data.frame(variable = flagvar, lower = lower, upper = upper,
-                            include_lower = include_lower,
-                            include_upper = include_upper,
-                            flg_label=flg_label)
-    names(newthresh) <- names(thresh)
-    thresh1 <- rbind(thresh, newthresh)
-  }
-  return(thresh1)
-}
-
-
-
-
 ## 
 # create protocol hour (PHOUR) if it's not already in the data set. 
 #' Create protocol hour variable if it's not already in the data set.

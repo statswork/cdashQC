@@ -1,16 +1,16 @@
 
 
-# find which variables have negative hours, note if "negativeHour == F" that means we should use screen or other (PHOUR) as baseline
-
-
-#' find the baseline hour for each test category
-#' 
-#' @title find which variables have negative hours, note if "negativeHour == F" that means we should use screen or other (PHOUR) as baseline
-#' @param temp1 currently support \code{vs}, \code{eg} and \code{lb_cq}.
-#' @return a data frame where by-subject baseline hour is determined. 
-#' @export
-#' @examples 
-#' hours <- negative_hour(eg)
+# # find which variables have negative hours, note if "negativeHour == F" that means we should use screen or other (PHOUR) as baseline
+# 
+# 
+# #' find the baseline hour for each test category
+# #' 
+# #' @title find which variables have negative hours, note if "negativeHour == F" that means we should use screen or other (PHOUR) as baseline
+# #' @param temp1 currently support \code{vs}, \code{eg} and \code{lb_cq}.
+# #' @return a data frame where by-subject baseline hour is determined. 
+# #' @export
+# #' @examples 
+# #' hours <- negative_hour(eg)
 negative_hour <- function(temp1){
   if (all(names(temp1) %in% "TEST_CODE")){
     stop("YOU must change the variable name to 'TEST_CODE'. Usually, this variable contains all the test categories!")

@@ -44,13 +44,13 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
   # statistical summaries
   c4 <- c3 %>%  group_by_(d1, "PHOUR", "SEQ") %>% 
                 summarise(COUNT = n(), 
-                          mean = mean(outcome),
-                          sd = sd(outcome), 
-                          mininum = min(outcome),
-                          q1 = quantile(outcome, probs = 0.25),
-                          median = median(outcome), 
-                          q3 = quantile(outcome, probs = 0.75),
-                          maximu = max(outcome)) %>%
+                          mean = mean(outcome, na.rm = na_rm),
+                          sd = sd(outcome, na.rm = na_rm), 
+                          mininum = min(outcome, na.rm = na_rm),
+                          q1 = quantile(outcome, probs = 0.25, na.rm = na_rm),
+                          median = median(outcome, na.rm = na_rm), 
+                          q3 = quantile(outcome, probs = 0.75, na.rm = na_rm),
+                          maximu = max(outcome, na.rm = na_rm)) %>%
                 mutate(cv = sd/mean)
   
   # transpose
@@ -121,7 +121,7 @@ replicate_average <- function(data_clean, included, digits = NULL, na_rm = TRUE)
   }
   
   if (!is.null(digits)){   # do you need to round the averages?
-    clean4 <- clean %>% round(outcome, digits = digits)
+    clean4 <- round_df(clean4, digits = digits)
   }
   
   return(clean4)

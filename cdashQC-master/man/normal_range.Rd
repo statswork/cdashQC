@@ -2,7 +2,7 @@
 % Please edit documentation in R/cdash_lab.R
 \name{normal_range}
 \alias{normal_range}
-\title{Find normal range}
+\title{Find normal range for lab test}
 \usage{
 normal_range(lab)
 }
