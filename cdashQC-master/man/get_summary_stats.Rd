@@ -4,7 +4,7 @@
 \alias{get_summary_stats}
 \title{get summary statistics}
 \usage{
-get_summary_stats(data, group = "EX_TRT_C", var = "race", na.rm = TRUE)
+get_summary_stats(data, group = "EX_TRT_C", var = "race", na_rm = TRUE)
 }
 \arguments{
 \item{data}{the data}

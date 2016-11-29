@@ -13,65 +13,80 @@
 create_aet <- function(ae, ex, included, improv = 99){
   
   # pay attention to | (elementwise use of "or") and || (overall evaluation)
-  ae <- ae %>% mutate( ptno = as.numeric(CLIENTID),
+  ae <- ae %>% mutate(               
               AE_TERM = replace(AE_TERM, AE_TERM == "" | AE_YN == "NO", "NONE" ),      
               ondate= parse_date_time(paste(ymd(AE_STDT), seconds_to_period(AE_STTM)), "Ymd HMS", truncated = 3), 
               redate= parse_date_time(paste(ymd(AE_ENDT), seconds_to_period(AE_ENTM)), "Ymd HMS", truncated = 3),      # recovery date and time of ae
               proceduretime1 = parse_date_time(paste(ymd(AE_PDT1), seconds_to_period(AE_PTM1)), "Ymd HMS", truncated=3)
-              ) %>% arrange(ptno)   # sort by ptno
+              ) %>%
+              arrange(CLIENTID)   # sort by ptno
 
+  
+ # %>% 
+  #  mutate(AE_STTM = replace(AE_STTM, !is.na(AE_STTM), format(ondate, "%H:%M:%S")), 
+  #         AE_ENTM = replace(AE_STTM, !is.na(AE_ENTM), format(redate, "%H:%M:%S")))
 
   #  start date and time of treatement
   
-  med <- ex %>% mutate(ptno= as.numeric(CLIENTID), 
-                      meddt= parse_date_time(paste(ymd(EX_STDAT), seconds_to_period(EX_STTIM)), "Ymd HMS", truncated = 3)) %>%
-              select(ptno, meddt, PERIOD, EX_TRT_C) %>%
+  med <- ex %>% mutate(                      
+              meddt= parse_date_time(paste(ymd(EX_STDAT), seconds_to_period(EX_STTIM)), "Ymd HMS", truncated = 3)
+              ) %>%
+              select(CLIENTID, meddt, PERIOD, EX_TRT_C) %>%
               filter(!is.na(meddt))  %>%
-              arrange(ptno, meddt) %>% mutate(medper = PERIOD) %>% select(-PERIOD) # remove NAs
-  firstmed <- med  %>% group_by(ptno) %>%  # group by ptno
-              filter(row_number(ptno)==1)    # select distinct values  (first.obs)
+              arrange(CLIENTID, meddt) %>% mutate(medper = PERIOD) %>% 
+              select(-PERIOD) # remove NAs
+  firstmed <- med  %>% group_by(CLIENTID) %>%  # group by CLIENTID
+              filter(row_number(CLIENTID)==1)    # select distinct values  (first.obs)
 
 
   # prior: ae prior dosing
-  prior <- inner_join(firstmed, ae, by = "ptno") %>%
-    dplyr::filter(ondate < meddt & (!is.na(ondate)))   # select those AEs occurred before dosing
+  prior <- inner_join(firstmed %>% arrange(CLIENTID),
+                      ae %>% arrange(CLIENTID), 
+                      by = "CLIENTID") %>%
+                      filter(ondate < meddt & (!is.na(ondate)))   # select those AEs occurred before dosing
 
   # after (no distinct value, because there might be multiple period)
   # potential problem when running CA18700 
-  after <- inner_join(med, ae, by = "ptno") %>%
-    dplyr::filter(ondate >= meddt | is.na(ondate) ) %>%
-               mutate(timediff = ondate-meddt)  # create timediff variable
+  after <- inner_join(med %>% arrange(CLIENTID), 
+                      ae %>% arrange(CLIENTID), 
+                      by = "CLIENTID") %>%
+                      filter(ondate >= meddt | is.na(ondate) ) %>%
+                      mutate(timediff = ondate-meddt)  # create timediff variable
 
   # separate "after" to three types
   # final1a = on study
   # final1b = unknown times
   # final1c = No AEs
 
-  new <- after %>% arrange(ptno, AE_NO, AE_TERM, ondate) %>% # order the variables
-         group_by(ptno, AE_NO, AE_TERM, ondate)
+  new <- after %>% arrange(CLIENTID, AE_NO, AE_TERM, ondate) %>% # order the variables
+         group_by(CLIENTID, AE_NO, AE_TERM, ondate)
   # select the first obs where ondate is not missing
   final1a <- new %>% filter(row_number(ondate)==1 & !(is.na(ondate)))
-  finalb <- new %>% filter(is.na(ondate)) %>% arrange(ptno, AE_NO, AE_TERM) %>% 
-                    group_by(ptno, AE_NO, AE_TERM) %>% 
+  finalb <- new %>% filter(is.na(ondate)) %>% arrange(CLIENTID, AE_NO, AE_TERM) %>% 
+                    group_by(CLIENTID, AE_NO, AE_TERM) %>% 
                     filter(row_number(AE_TERM)==1)  # select distinct values
   
   final1b <- finalb %>% filter(AE_TERM != "NONE")  
   final1c <- finalb %>% filter(  AE_TERM == "NONE")
 
   final <- bind_rows(prior, final1a, final1b, final1c) %>% # efficient way to rbind
-          arrange(ptno)
+          arrange(CLIENTID)
+  
   if ( nrow(final) != nrow(ae)) stop(paste("final has ", nrow(final), "observations while ae has",
                            nrow(ae), "You are losing observations (Duplicates Maybe?)", sep = " " ))
  # final <- final %>% mutate(duration = as.period(redate - ondate))
  # final <- final %>% mutate(duration = as.period(interval(as.POSIXct(ondate), as.POSIXct(redate))))
   final$duration = as.period(interval(as.POSIXct(final$ondate), as.POSIXct(final$redate)))
   
-  included1 <- included %>% mutate(ptno = as.numeric(PTNO), seq = SEQ) %>% select(ptno, seq)
-  final <- left_join(final, included1, by = "ptno")
+  included1 <- included %>% select(CLIENTID, SEQ)
+  final <- left_join(final %>% arrange(CLIENTID), 
+                     included1 %>% arrange(CLIENTID), 
+                     by = "CLIENTID")
+  
   ids <- toupper(final$medper) %in% c('PREDOSE','CC','CREATININE CLEARANCE','SCREENING','ALL','UNKNOWN','UNK','SCREEN')
   final <- final[!ids, ] %>% mutate(pernew = as.numeric(substr(medper, 1, 1)),
-                                      treat = substr(seq, pernew, pernew) ) %>%
-                              arrange(ptno, ondate, AE_TERM)  #sort
+                                      treat = substr(SEQ, pernew, pernew) ) %>%
+                              arrange(CLIENTID, ondate, AE_TERM)  #sort
   
   final <- final %>% mutate(t_e =  ifelse(is.na(duration), "NO", "YES") )
   
@@ -80,12 +95,12 @@ create_aet <- function(ae, ex, included, improv = 99){
   if (nrow(improve) > 0){ # if the improve data is not empty
      improve <- improve %>%
         mutate(ondate = parse_date_time(paste(ymd(AE_ENDT), seconds_to_period(AE_ENTM)), "Ymd HMS", truncated = 3)) %>%
-        select(ptno, ondate, AE_TERM)  %>% arrange(ptno, ondate, AE_TERM)
+        select(CLIENTID, ondate, AE_TERM)  %>% arrange(CLIENTID, ondate, AE_TERM)
 
-      final <- full_join(final, improve, by = c("ptno", "ondate", "AE_TERM"))
+      final <- full_join(final, improve, by = c("CLIENTID", "ondate", "AE_TERM"))
     }
 
-   aet <- final %>% mutate(pern = as.numeric(pernew)) %>% select(-pernew, -seq, -timediff)
+   aet <- final %>% mutate(pern = as.numeric(pernew)) %>% select(-pernew, -SEQ, -timediff)
    aet$treat[aet$t_e == "NO" | toupper(ae$AE_TERM) == "NONE"] <- " "
 
    return(aet)
@@ -128,7 +143,7 @@ listing_ae <- function(aet, type = 1){
 
 ae1 <- function(aet){
 
-  aet_subset <-  aet %>% select(ptno, pern, t_e, AE_TERM, AE_STDT, AE_STTM, AE_ENDT, 
+  aet_subset <-  aet %>% select(CLIENTID, pern, t_e, AE_TERM, AE_STDT, AE_STTM, AE_ENDT, 
                        AE_ENTM, duration, EX_TRT_C, ondate, redate)
   
     result <- aet_subset %>% mutate(AE_STTM = format(ondate, "%H:%M:%S"),
@@ -151,7 +166,7 @@ ae1 <- function(aet){
 # #' 
 ae2 <- function(aet){
 
-  aet_subset <- aet %>% select(ptno, pern, EX_TRT_C, AE_TERM, AE_STDT, AE_STTM,
+  aet_subset <- aet %>% select(CLIENTID, pern, EX_TRT_C, AE_TERM, AE_STDT, AE_STTM,
                                AE_FRQ_D, AE_SEV_D, AE_SER_D, AE_OUT_D, 
                                AE_REL_D, AE_ACT_D, AE_AN1_D, ondate, redate)
   
@@ -181,7 +196,7 @@ ae2 <- function(aet){
 ae3 <- function(aet){
 
   aet_s <- aet %>% filter(trimws(AE_P1) != "") %>%
-           select(ptno, pern, EX_TRT_C, AE_TERM, AE_STDT, AE_STTM, 
+           select(CLIENTID, pern, EX_TRT_C, AE_TERM, AE_STDT, AE_STTM, 
                    AE_PDT1, AE_PTM1, AE_P1, ondate, proceduretime1) 
   
     result <- aet_s %>% mutate(AE_STTM = format(ondate, "%H:%M:%S"),

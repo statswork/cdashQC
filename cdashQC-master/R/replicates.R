@@ -47,8 +47,8 @@ guess_reps <- function(data, var_identifier = "_TEST"){
   
   d1 <- guess_test(data, var_identifier = var_identifier)     # get the variable name  of the test code
   r0 <- data %>% create_phour() %>%                    # if no PHOUR available, create one
-    select(CLIENTID, PERIOD, PHOUR, matches(d1))
-  names(r0)[names(r0)==d1] <- "TEST_CODE"              # change the name for easy manipulation.
+                 select(CLIENTID, PERIOD, PHOUR, matches(d1))
+                 names(r0)[names(r0)==d1] <- "TEST_CODE"              # change the name for easy manipulation.
   
   periods <- unique(r0$PERIOD)
   result <- data.frame()
@@ -56,16 +56,16 @@ guess_reps <- function(data, var_identifier = "_TEST"){
     r1 <- r0 %>% filter(PERIOD == periods[i])
     r2 <- as.data.frame(ftable(r1))                       # get the cross-table
     r3 <- r2 %>% group_by(TEST_CODE, PERIOD, PHOUR) %>% 
-      summarize(shouldHave = calc_mode(Freq) ) %>%  # use the mode to decide the number of reps
-      ungroup() %>% mutate_if(is.factor, as.character) 
+                 summarize(shouldHave = calc_mode(Freq) ) %>%  # use the mode to decide the number of reps
+                 ungroup() %>% mutate_if(is.factor, as.character) 
     
     result <- bind_rows(result, r3) 
     
   }
   
   result <- result %>% arrange(PERIOD, PHOUR, TEST_CODE) %>% 
-    select(PERIOD, PHOUR, TEST_CODE, shouldHave) %>%
-    filter(shouldHave > 0)
+                       select(PERIOD, PHOUR, TEST_CODE, shouldHave) %>%
+                       filter(shouldHave > 0)
   
   names(result)[names(result)=="TEST_CODE"] <- d1
   return(result)
@@ -109,7 +109,7 @@ replicate_check <- function(data, reps = NULL, printed = TRUE){
   
   ## find those having issue with reps
   t2 <- t1 %>% mutate(exact_reps = ifelse(Freq==shouldHave, TRUE, FALSE)) %>% 
-    filter(exact_reps== FALSE)
+               filter(exact_reps== FALSE)
   
   # if t2 is not empty, then the corresponding subject has measurement issues
   if(nrow(t2) > 0 ){

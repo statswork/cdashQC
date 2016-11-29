@@ -67,7 +67,7 @@ calc_mode <- function(x) {
 #' get_summary_stats(data, group = "SEQ", var = "subtype")
 #' get_summary_stats(data, group = "SEQ", var = "BMI")
 
-get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRUE){
+get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na_rm =TRUE){
 
   var_col <- which( names(data)== var)
   var_attrib <- is.numeric(as.vector(data[, var_col]))
@@ -87,12 +87,12 @@ get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRU
   else{  # if it's numerical 
     result <- data %>% select_(var, group) %>% 
       group_by_(group) %>% 
-      summarise_(N = interp(~sum(val >0, na.rm = na.rm), val = as.name(var)), 
-                 MEAN = interp(~mean(val, na.rm = na.rm), val = as.name(var)),
-                 SD = interp(~sd(val, na.rm = na.rm), val = as.name(var)), 
-                 MINIMUM = interp(~min(val, na.rm = na.rm), val= as.name(var)), 
-                 MEDIAN = interp(~median(val, na.rm = na.rm), val = as.name(var)), 
-                 MAXIMUM = interp(~max(val, na.rm= na.rm), val =as.name(var)))
+      summarise_(N = interp(~sum(val >0, na.rm = na_rm), val = as.name(var)), 
+                 MEAN = interp(~mean(val, na.rm = na_rm), val = as.name(var)),
+                 SD = interp(~sd(val, na.rm = na_rm), val = as.name(var)), 
+                 MINIMUM = interp(~min(val, na.rm = na_rm), val= as.name(var)), 
+                 MEDIAN = interp(~median(val, na.rm = na_rm), val = as.name(var)), 
+                 MAXIMUM = interp(~max(val, na.rm= na_rm), val =as.name(var)))
     
     result0 <- result %>% melt(id = group, variable.name = "type") %>%
       spread_(group, "value")  %>%  mutate(trait = var)

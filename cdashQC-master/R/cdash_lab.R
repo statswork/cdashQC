@@ -15,7 +15,7 @@ create_lab <- function(lb_cq){
   lab2 <- lab1 %>% select(CLIENTID, PHOUR, PERIOD, DAY, HOUR, LB_SEX_C, LB_CAT, LB_TEST, 
                           LB_TESTC, LB_DAT, LB_TIM, LB_ORRES, LB_ORREU, LB_ORLO, LB_ORHI, LB_STNRC, LB_UNSCH,
                           LB_CMTST, LB_NRIND, LB_CSGFG, LB_PISIG, status) %>%
-                    mutate(LB_CAT = replace(LB_CAT, !(trimws(LB_CAT) %in% c('CHEM','HEME','UA','UDS','COAG','VIROL')), "OTH"), 
+                    mutate( 
                            LB_ORRES = replace(LB_ORRES,trimws(toupper(LB_CMTST)) == "CLOTTED UNABLE TO ANALYZE", "CUTA"), 
                            LB_ORRES = replace(LB_ORRES,trimws(toupper(LB_CMTST)) == "TOO NUMEROUS TO COUNT", "TNTC"),
                            labdate = parse_date_time(paste(ymd(LB_DAT), seconds_to_period(LB_TIM)), "Ymd HMS", truncated = 3)
