@@ -18,7 +18,7 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
   
   c1 <- replicate_average(data_clean, included, digits = inter_digit, na_rm = na_rm)
   
-  if(ischangefrombase){
+  if(ischangefrombase){  # if it's for change from baseline
  
     baseline <- c1 %>% filter(status == "BASELINE") %>% 
                       mutate(baseline = outcome) %>% ungroup() %>%
@@ -35,7 +35,7 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
     # change from baseline
     c3 <- c2 %>% mutate(outcome = postdose - baseline) 
     
-  } else{
+  } else{   # if it's not for change from baseline
     
     c3 <- c1 
   }

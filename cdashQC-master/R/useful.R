@@ -67,7 +67,7 @@ calc_mode <- function(x) {
 #' get_summary_stats(data, group = "SEQ", var = "subtype")
 #' get_summary_stats(data, group = "SEQ", var = "BMI")
 
-get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na_rm =TRUE){
+get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRUE){
 
   var_col <- which( names(data)== var)
   var_attrib <- is.numeric(as.vector(data[, var_col]))
@@ -87,12 +87,12 @@ get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na_rm =TRU
   else{  # if it's numerical 
     result <- data %>% select_(var, group) %>% 
       group_by_(group) %>% 
-      summarise_(N = interp(~sum(val >0, na.rm = na_rm), val = as.name(var)), 
-                 MEAN = interp(~mean(val, na.rm = na_rm), val = as.name(var)),
-                 SD = interp(~sd(val, na.rm = na_rm), val = as.name(var)), 
-                 MINIMUM = interp(~min(val, na.rm = na_rm), val= as.name(var)), 
-                 MEDIAN = interp(~median(val, na.rm = na_rm), val = as.name(var)), 
-                 MAXIMUM = interp(~max(val, na.rm= na_rm), val =as.name(var)))
+      summarise_(N = interp(~sum(val >0, na.rm = na.rm), val = as.name(var)), 
+                 MEAN = interp(~mean(val, na.rm = na.rm), val = as.name(var)),
+                 SD = interp(~sd(val, na.rm = na.rm), val = as.name(var)), 
+                 MINIMUM = interp(~min(val, na.rm = na.rm), val= as.name(var)), 
+                 MEDIAN = interp(~median(val, na.rm = na.rm), val = as.name(var)), 
+                 MAXIMUM = interp(~max(val, na.rm= na.rm), val =as.name(var)))
     
     result0 <- result %>% melt(id = group, variable.name = "type") %>%
       spread_(group, "value")  %>%  mutate(trait = var)
@@ -176,6 +176,37 @@ round_df <- function(df, digits = 3){
 }
 
 
+
+#' Format the time variable in a data set
+#' 
+#' @titile format time variable in a data set
+#' @param data the data which contains the time variables
+#' @param date the date variable
+#' @param time the time (in seconds)
+#' @return the same data set but \code{time} has been changed to "hh:mm:ss" format.
+#' @export 
+#' 
+#'
+
+format_time <- function(data, date = "AE_STDT", time = "AE_STTM"){
+  
+  col_id <- which(names(data) %in% c(date, time))
+  
+  new_dat <- data[, col_id]  # 
+  row_id <- complete.cases(new_dat)  # which rows are non NA
+  new_sub <- data.frame(new_dat[row_id, ])
+  names(new_sub) <- c("col1", "col2")
+  
+  # first combine date and time into one variable and then separate them 
+  new_sub2 <- new_sub %>% 
+    mutate(newtime = parse_date_time(paste(ymd(col1), seconds_to_period(col2)), "Ymd HMS", truncated = 3)) %>% 
+    mutate(col2 = format(newtime, "%H:%M:%S")) %>%
+    select(-newtime)
+  
+  data[row_id, col_id] <- new_sub2
+
+  return(data)
+}
 
 
 
