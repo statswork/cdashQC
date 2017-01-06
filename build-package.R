@@ -13,4 +13,5 @@ install.packages("~/cdashQC/cdashQC_0.1.3.tar.gz", repos = NULL, type = "source"
 ## generate the help manual.
 pack <- "cdashQC"
 path <- find.package(pack)
-system(paste(shQuote(file.path(R.home("bin"), "R")), "CMD", "Rd2pdf", shQuote(path)))
+# system(paste(shQuote(file.path(R.home("bin"), "R")), "CMD", "Rd2pdf", shQuote(path)))
+system(paste(file.path(R.home("bin"), "R"), "CMD", "Rd2pdf", path))

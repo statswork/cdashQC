@@ -208,120 +208,6 @@ ae3 <- function(aet){
 
 
 
-# #' summarize treatment-emergent adverse event by subjects
-# #' 
-# #' @title teae by subjects
-# #' @param data the data set created by \code{\link{create_aet}}
-# #' @return a list
-# #' \item{ae}{frequency table for teae}
-# #' \item{soc}{summarization by system organ class and by preferred term}
-# #' @export 
-# #' 
-
-summary_teae_by_subject <- function(data, group = "STUDYNO", var = "EX_TRT_C"){
-  
-  # total number of subjects doesd
-  dosed <- data %>% distinct(CLIENTID, .keep_all = TRUE) %>%
-                    ungroup() %>% 
-                    get_summary_stats(group = group, var = var)
- 
-  
-  # total number of subjects with teae
-  teae <- data %>% filter(teae == "YES") %>%
-                   distinct(CLIENTID, .keep_all = TRUE) %>% 
-                   ungroup %>%
-                   get_summary_stats(group = group, var= var)
-  
-  
-  temp <- left_join(dosed %>% select(-trait) %>% arrange(type),
-                    teae %>% select(-trait) %>% arrange(type), 
-                    by = "type")
-  names(temp) <- c("treat", "dosed", "with_teae")
-  temp$without_teae <- temp$dosed-temp$with_teae
-  
-  temp2 <- temp %>% gather(ae, number,  -treat) %>% 
-                    spread(treat, number) 
-  
-  temp2$overall <- rowSums(temp2[, -1])
-
-  t1 <- data %>% filter(teae == "YES") %>%
-                  group_by(CLIENTID, AEP_PT) %>%
-                  filter(row_number()==1) %>%      # remove duplicated obs for each subject
-                  ungroup() 
- 
-  # teae table for system organ class 
-  soc <- t1 %>% get_summary_stats(group = var, var = "AEP_SOC")
-  
-  # teae table for preferred term 
-  pt <- t1 %>% get_summary_stats(group = var, var = "AEP_PT")
-  
-  # match SOC and PT
-  soc_pt <- data %>% ungroup %>% select(AEP_SOC, AEP_PT) %>% distinct()
-  
-  
-  pt2 <- right_join(soc_pt %>% arrange(AEP_PT), 
-                    pt %>% mutate(AEP_PT = type) %>% select(-trait, -type) %>% arrange(AEP_PT), 
-                    by = "AEP_PT")
-
-  soc2 <- soc %>% mutate(AEP_SOC = type, AEP_PT = "--Total--") %>% select(-trait, -type)
-  
-  soc_pt2 <- bind_rows(pt2, soc2, .id = "from") %>% arrange(AEP_SOC, desc(from), AEP_PT) %>% select(-from)
-
-  soc_pt2$Overall <- rowSums(soc_pt2[, -(1:2)])
-    
-  result <- list(ae = temp2, soc = soc_pt2)
-  return(result)  
-}
-
-
-
-
-# #' summarize treatment-emergent adverse event by events
-# #' 
-# #' @title teae by number of events
-# #' @param data the data set created by \code{\link{create_aet}}
-# #' @return a list
-# #' \item{ae}{frequency table for teae}
-# #' \item{soc}{summarization by system organ class and by preferred term}
-# #' @export 
-# #' 
-
-summary_teae_by_event <- function(data, group = "STUDYNO", var = "EX_TRT_C"){
-  
-  N_teae <- data %>% filter(teae == "YES") %>%
-                     ungroup() %>%
-                     get_summary_stats(group = group, var = var)
-  names(N_teae)[3] <- "col3"
-  
-  N_teae2 <- N_teae %>% mutate(trait = "N_TEAEs") %>% 
-             spread(type, col3) 
-  N_teae2$Overall <- rowSums(N_teae2[, -1])
-  
-  # summarize by soc and pt
-  t1 <- data %>% filter(teae == "YES") %>% ungroup() 
-  
-  soc <- t1 %>% get_summary_stats(group = var, var = "AEP_SOC")
-  pt <- t1 %>% get_summary_stats(group = var, var = "AEP_PT")
-  
-  # match SOC and PT
-  soc_pt <- data %>% ungroup %>% select(AEP_SOC, AEP_PT) %>% distinct()
-  
-  
-  pt2 <- right_join(soc_pt %>% arrange(AEP_PT), 
-                    pt %>% mutate(AEP_PT = type) %>% select(-trait, -type) %>% arrange(AEP_PT), 
-                    by = "AEP_PT")
-  
-  soc2 <- soc %>% mutate(AEP_SOC = type, AEP_PT = "--Total--") %>% select(-trait, -type)
-  
-  soc_pt2 <- bind_rows(pt2, soc2, .id = "from") %>% arrange(AEP_SOC, desc(from), AEP_PT) %>% select(-from)
-  
-  soc_pt2$Overall <- rowSums(soc_pt2[, -(1:2)])
-  
-  result <- list(ae=N_teae2, soc = soc_pt2)
-  
-}
-
-
 #' summarize treatment-emergent adverse event
 #' 
 #' @title teae by number of subjects or by number of events
@@ -334,29 +220,107 @@ summary_teae_by_event <- function(data, group = "STUDYNO", var = "EX_TRT_C"){
 #' \item{soc}{summarization by system organ class and by preferred term}
 #' @export 
 
-summary_teae1 <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subject"){
+summary_teae <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subject"){
   stopifnot(by %in% c("subject", "event"))
  
    if (by == "subject"){
-    result <- summary_teae_by_subject(data, group = group, var = var)
-  }
+     
+       # total number of subjects doesd
+       dosed <- data %>% distinct(CLIENTID, .keep_all = TRUE) %>%
+                         ungroup() %>% 
+                         get_summary_stats(group = group, var = var)
+       
+       # total number of subjects with teae
+       teae <- data %>% filter(teae == "YES") %>%
+                        distinct(CLIENTID, .keep_all = TRUE) %>% 
+                        ungroup %>%
+                        get_summary_stats(group = group, var= var)
+       
+       temp <- left_join(dosed %>% select(-trait) %>% arrange(type),
+                         teae %>% select(-trait) %>% arrange(type), 
+                         by = "type")
+       names(temp) <- c("treat", "dosed", "with_teae")
+       temp$without_teae <- temp$dosed-temp$with_teae
+       
+       temp2 <- temp %>% gather(ae, number,  -treat) %>% 
+                         spread(treat, number) 
+       
+       temp2$overall <- rowSums(temp2[, -1])
+       
+       t1 <- data %>% filter(teae == "YES") %>%
+                      group_by(CLIENTID, AEP_PT) %>%
+                      filter(row_number()==1) %>%      # remove duplicated obs for each subject
+                      ungroup() 
+    
+     } 
   if (by == "event"){
-    result <- summary_teae_by_event(data, group = group, var = var)
-  }  
+    
+        N_teae <- data %>% filter(teae == "YES") %>%
+                           ungroup() %>%
+                           get_summary_stats(group = group, var = var)
+        names(N_teae)[3] <- "col3"
+        
+        temp2 <- N_teae %>% mutate(trait = "N_TEAEs") %>% 
+                              spread(type, col3) 
+        temp2$Overall <- rowSums(temp2[, -1])
+        
+        # summarize by soc and pt
+        t1 <- data %>% filter(teae == "YES") %>% ungroup() 
+    }  
+  
+  
+  # teae table for system organ class 
+  soc <- t1 %>% get_summary_stats(group = var, var = "AEP_SOC")
+  # teae table for preferred term 
+  pt <- t1 %>% get_summary_stats(group = var, var = "AEP_PT")
+  # match SOC and PT
+  soc_pt <- data %>% ungroup %>% select(AEP_SOC, AEP_PT) %>% distinct()
+  pt2 <- right_join(soc_pt %>% arrange(AEP_PT), 
+                    pt %>% mutate(AEP_PT = type) %>% select(-trait, -type) %>% arrange(AEP_PT), 
+                    by = "AEP_PT")
+  
+  soc2 <- soc %>% mutate(AEP_SOC = type, AEP_PT = "--Total--") %>% select(-trait, -type)
+  soc_pt2 <- bind_rows(pt2, soc2, .id = "from") %>% arrange(AEP_SOC, desc(from), AEP_PT) %>% select(-from)
+  soc_pt2$Overall <- rowSums(soc_pt2[, -(1:2)])
+  
+  result <- list(ae=temp2, soc = soc_pt2)
+  
   return(result)
 }
 
-
-summary_teae_sev1 <- function(data, group = "STUDYNO", var = "EX_TRT_C"){
-  
+#' summarize adverse events by severity
+#' 
+#' @title Adverse event by severity
+#' @param data the data set created by \code{\link{create_aet}}
+#' @param group choose a varialbe that has all values identical (e.g., "STUDYNO").
+#' @param var the treatment variable name, "EX_TRT_C" for example
+#' @param by  has two options, either "\code{event}" or "\code{subject}". If \code{by = "subject"}, the subject will be counted under the highest severity level.
+#' @return a list
+#' \item{pt}{frequency table by preferred term}
+#' \item{total}{frequency table by treatment}
+#' @export 
+#' 
+summary_ae_sev <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subject"){
+    
+  stopifnot(by %in% c("subject", "event"))
   # summarize overall
-  o1 <- data %>% filter(teae == "YES") %>%
-                 group_by(CLIENTID, AEP_PT, AE_SEV_D) %>%
-                 filter(row_number()==1) %>%
-                 ungroup() 
-
+ if (by == "subject"){
+     o1 <- data %>% filter(!is.na(AE_STDT)) %>%                    # if it has a start date, then it's AE
+                   group_by(CLIENTID, AEP_PT, AE_SEV) %>%          # keep the most severe case 
+                   filter(row_number()==n()) %>%                    # make sure this is by-subject.
+                   ungroup()
+   
+   } 
+  if (by == "event") {
+   
+     o1 <- data %>% filter(!is.na(AE_STDT)) %>% 
+                    group_by(CLIENTID, AEP_PT, AE_SEV) %>%
+                    ungroup() 
+   
+  }
+  
   pt1 <- o1 %>% group_by_(var, "AEP_PT", "AE_SEV_D") %>%
-               summarize(count = n()) 
+                summarize(count = n()) 
   names(pt1)[1] <- "col1"
   pt2 <- pt1 %>% dcast(AEP_PT + AE_SEV_D ~ col1, fill = 0)
   pt2$Overall <- rowSums(pt2[, -(1:2)])
@@ -366,7 +330,58 @@ summary_teae_sev1 <- function(data, group = "STUDYNO", var = "EX_TRT_C"){
   t2 <- t1 %>% dcast(AE_SEV_D ~ col1, fill = 0)
   t2$Overall <- rowSums(t2[, -1])
   
+  result <- list(pt = pt2, total = t2)
+  return(result)
 }
 
 
 
+
+#' summarize adverse events by relationship to study drug
+#' 
+#' @title Adverse event by relationship to study drug
+#' @param data the data set created by \code{\link{create_aet}}
+#' @param group choose a varialbe that has all values identical (e.g., "STUDYNO").
+#' @param var the treatment variable name, "EX_TRT_C" for example
+#' @param by  has two options, either "\code{event}" or "\code{subject}". If \code{by = "subject"}, that means When a subject experienced the same AE at more than one level of drug relationship during a treatment period, each AE was counted separately
+#' @return a list
+#' \item{pt}{frequency table by preferred term}
+#' \item{total}{frequency table by treatment}
+#' @export 
+#' 
+#' 
+
+summary_ae_rel <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subject"){
+  stopifnot(by %in% c("subject", "event"))
+  # summarize overall
+  if (by == "subject"){
+    o1 <- data %>% filter(!is.na(AE_STDT)) %>%                    # if it has a start date, then it's AE
+      group_by(CLIENTID, AEP_PT, AE_REL_D) %>%          
+      filter(row_number()==1) %>%                    # make sure this is by-subject and each relativeness is counted once for a subject who has more than 2 levels 
+      ungroup()
+    
+  } 
+  if (by == "event") {
+    
+    o1 <- data %>% filter(!is.na(AE_STDT)) %>% 
+      group_by(CLIENTID, AEP_PT, AE_REL_D) %>%
+      ungroup() 
+    
+  }
+  
+  
+  pt1 <- o1 %>% group_by_(var, "AEP_PT", "AE_REL_D") %>%
+                summarize(count = n()) 
+  names(pt1)[1] <- "col1"
+  pt2 <- pt1 %>% dcast(AEP_PT + AE_REL_D ~ col1, fill = 0)
+  pt2$Overall <- rowSums(pt2[, -(1:2)])
+  
+  t1 <- o1 %>% group_by_(var, "AE_REL_D") %>% summarize(count = n())
+  names(t1)[1] <- "col1"
+  t2 <- t1 %>% dcast(AE_REL_D ~ col1, fill = 0)
+  t2$Overall <- rowSums(t2[, -1])
+  
+  result <- list(pt = pt2, total = t2)
+  return(result)
+  
+}
