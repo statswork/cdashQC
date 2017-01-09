@@ -111,7 +111,7 @@ create_dis <- function(ex, ds){
   }
   names(dis)[ncol(dis)] <- paste("comp_", totper, sep = "")
   
-  dis <- dis %>% select(CLIENTID, starts_with("comp_"))  # the SAS code has DS_ANS included
+  dis <- dis %>% select(CLIENTID, starts_with("comp_"), DS_SPEC)  # the SAS code has DS_ANS included
   return(dis)  
 }
 
@@ -142,13 +142,15 @@ create_included <- function(ex, dm, cr, ds){
                                   by = "CLIENTID"), 
                         by = "CLIENTID") %>%
               mutate(flag = "")
-  id3 <- seqtest1$trtflg != "" | seqtest1$chkflg != ""  # the SAS code has DS_ANS included
+  names(seqtest1)[grepl("comp_", names(seqtest1)) > 0] <- "compprot"
+  id3 <- seqtest1$trtflg != "" | seqtest1$chkflg != "" |seqtest1$compprot != "Y" # the SAS code has DS_ANS included
   seqtest1$flag[id3] <- "*"
   
-  seqtest2 <- seqtest1 %>% select(-trtflg, -chkflg) %>% 
-              mutate(compprot = ifelse(flag != "",  "Y", "N"), 
-                     safeanal = "Y",
-                     pkanal = ifelse(flag != "", "Y", "N"))
+
+  seqtest2 <- seqtest1 %>% select(-trtflg, -chkflg, -DS_SPEC) %>% 
+              mutate(safeanal = "Y",
+                     pkanal = ifelse(flag == "", "Y", "N"))
+
   
   names(seqtest2) <- toupper(names(seqtest2))
   return(seqtest2)

@@ -279,7 +279,17 @@ lab_oor <- function(lab){
                         trimws(toupper(PERIOD)) == "EARLY TERMINATION" |
                         trimws(toupper(PERIOD)) == "UNSCHEDULED")
   # normal ranges
-  nr <- normal_range(lab) %>% ungroup() %>% select(LB_CAT, LB_TESTC, range)
+  nr <- normal_range(lab) 
+  nr_female <- nr %>% filter(grepl("F", sex) > 0)
+  nr_other <- nr %>% filter(grepl("F", sex) == 0)
+  
+  nr1 <- full_join(nr_other %>% arrange(LB_CAT, LB_TESTC),
+                  nr_female %>% arrange(LB_CAT, LB_TESTC),
+                  by = c("LB_CAT", "LB_TESTC")) 
+  nr <- nr1 %>% ungroup() %>% replace_na(list(range.x = "", range.y = "")) %>%
+                mutate(range = paste(range.x, range.y, sep = " ")) %>%
+                select(LB_CAT, LB_TESTC, range)
+  
   
   oor <- left_join(lab1 %>% arrange(LB_CAT, LB_TESTC), 
                    nr %>% arrange(LB_CAT, LB_TESTC), 
@@ -289,11 +299,12 @@ lab_oor <- function(lab){
   
   oor1 <- list()
     for ( i in 1:length(labcat)) {
+      # print(i)
       r1 <- filter(oor, LB_CAT == labcat[i]) %>% mutate(outcome = paste(LB_ORRES, signal))
       if(nrow(r1) >0 ) {  # not empty
-        r2 <- r1 %>% select(CLIENTID, PERIOD, PHOUR, DAY, HOUR, LB_DAT, range, LB_TEST, outcome) %>% 
-          spread(LB_TEST, outcome)
-        oor1[[i]] <- r2 %>% arrange(CLIENTID, PERIOD, DAY, HOUR)
+        r2 <- r1 %>% select(CLIENTID, LB_SEX_C, PERIOD, PHOUR, DAY, HOUR, LB_DAT, LB_TIM, range, LB_TEST, outcome) %>%
+              spread(LB_TEST, outcome)
+        oor1[[i]] <- r2 %>% arrange(CLIENTID, LB_SEX_C, PERIOD, DAY, HOUR)
       } else {
         oor1[[i]] <- NULL 
       }

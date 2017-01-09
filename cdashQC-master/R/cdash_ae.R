@@ -99,7 +99,7 @@ create_aet <- function(ae, ex, included, improv = 99){
       final <- full_join(final, improve, by = c("CLIENTID", "ondate", "AE_TERM"))
     }
 
-   aet <- final %>% mutate(pern = as.numeric(pernew)) %>% select(-pernew, -SEQ, -timediff)
+   aet <- final %>% mutate(pern = as.numeric(pernew)) %>% select(-pernew, -timediff)
    aet$treat[aet$teae == "NO" | toupper(ae1$AE_TERM) == "NONE"] <- " "
 
    return(aet)
@@ -322,12 +322,12 @@ summary_ae_sev <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subj
   pt1 <- o1 %>% group_by_(var, "AEP_PT", "AE_SEV_D") %>%
                 summarize(count = n()) 
   names(pt1)[1] <- "col1"
-  pt2 <- pt1 %>% dcast(AEP_PT + AE_SEV_D ~ col1, fill = 0)
+  pt2 <- pt1 %>% dcast(AEP_PT + AE_SEV_D ~ col1, fill = 0, value.var = "count")
   pt2$Overall <- rowSums(pt2[, -(1:2)])
   
   t1 <- o1 %>% group_by_(var, "AE_SEV_D") %>% summarize(count = n())
   names(t1)[1] <- "col1"
-  t2 <- t1 %>% dcast(AE_SEV_D ~ col1, fill = 0)
+  t2 <- t1 %>% dcast(AE_SEV_D ~ col1, fill = 0, value.var = "count")
   t2$Overall <- rowSums(t2[, -1])
   
   result <- list(pt = pt2, total = t2)
@@ -373,12 +373,12 @@ summary_ae_rel <- function(data, group = "STUDYNO", var = "EX_TRT_C", by = "subj
   pt1 <- o1 %>% group_by_(var, "AEP_PT", "AE_REL_D") %>%
                 summarize(count = n()) 
   names(pt1)[1] <- "col1"
-  pt2 <- pt1 %>% dcast(AEP_PT + AE_REL_D ~ col1, fill = 0)
+  pt2 <- pt1 %>% dcast(AEP_PT + AE_REL_D ~ col1, fill = 0, value.var = "count")
   pt2$Overall <- rowSums(pt2[, -(1:2)])
   
   t1 <- o1 %>% group_by_(var, "AE_REL_D") %>% summarize(count = n())
   names(t1)[1] <- "col1"
-  t2 <- t1 %>% dcast(AE_REL_D ~ col1, fill = 0)
+  t2 <- t1 %>% dcast(AE_REL_D ~ col1, fill = 0, value.var = "count")
   t2$Overall <- rowSums(t2[, -1])
   
   result <- list(pt = pt2, total = t2)
