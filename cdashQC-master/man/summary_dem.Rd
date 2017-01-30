@@ -4,7 +4,7 @@
 \alias{summary_dem}
 \title{demographic summary.}
 \usage{
-summary_dem(dmt, group = "EX_TRT_C", na.rm = TRUE)
+summary_dem(dmt, group = "SEQ", na.rm = TRUE)
 }
 \arguments{
 \item{dmt}{the data set created by \code{create_dem}.}

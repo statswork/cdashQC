@@ -4,12 +4,10 @@
 \alias{create_dem}
 \title{create the demographics data.}
 \usage{
-create_dem(dm, ex, vs, included)
+create_dem(dm, vs, included)
 }
 \arguments{
 \item{dm}{the dm data set}
-
-\item{ex}{the ex data set}
 
 \item{vs}{the vs data set}
 

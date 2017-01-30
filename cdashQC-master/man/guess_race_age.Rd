@@ -4,7 +4,7 @@
 \alias{guess_race_age}
 \title{race and ethnicity indicator, age.}
 \usage{
-guess_race_age(dm, ex)
+guess_race_age(dm, included)
 }
 \arguments{
 \item{dm}{the dataset dm read from sas}

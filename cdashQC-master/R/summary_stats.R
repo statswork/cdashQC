@@ -3,7 +3,6 @@
 #' 
 #' @title summary statistics
 #' @param data_clean the clean data set returned by \code{\link{replicate_clean}}.
-#' @param included the included data set created by \code{\link{create_included}}
 #' @param inter_digit  if rounding happens for the intermediate averages, what digits should be kept.
 #' @param final_digit what is the digit for final summary?
 #' @param na_rm  should missing values be excluede? Default set to be \code{TRUE}.
@@ -11,18 +10,20 @@
 #' @return a data frame with summary statistics by test, time point and treatment.
 #' @export
 
-summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits = 3, na_rm=TRUE, ischangefrombase = FALSE){
+summary_vs_eg <- function(data_clean, inter_digit = NULL, final_digits = 3, na_rm=TRUE, ischangefrombase = FALSE){
   
   # guess what the data set is 
   d1 <- guess_test(data_clean)
   
-  c1 <- replicate_average(data_clean, included, digits = inter_digit, na_rm = na_rm)
+  c1 <- replicate_average(data_clean, digits = inter_digit, na_rm = na_rm) %>% ungroup() %>%
+        unite_("seq_period", c("SEQ", "PERIOD"), remove = FALSE) 
+  
   
   if(ischangefrombase){  # if it's for change from baseline
  
     baseline <- c1 %>% filter(status == "BASELINE") %>% 
                       mutate(baseline = outcome) %>% ungroup() %>%
-                      select(-outcome, -status, -PHOUR)
+                      select(-outcome, -status, -seq_period, -PERIOD, -PHOUR)
                     
     postdose <- c1 %>% filter(status == "POSTDOSE") %>% 
                       mutate(postdose = outcome) %>% ungroup() %>%
@@ -37,12 +38,12 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
     
   } else{   # if it's not for change from baseline
     
-    c3 <- c1 
+    c3 <- c1 %>% filter(status %in% c("BASELINE", "POSTDOSE"))
   }
   
   
   # statistical summaries
-  c4 <- c3 %>%  group_by_(d1, "PHOUR", "SEQ") %>% 
+  c4 <- c3 %>%  group_by_(d1, "seq_period", "PHOUR") %>% 
                 summarise(COUNT = n(), 
                           mean = mean(outcome, na.rm = na_rm),
                           sd = sd(outcome, na.rm = na_rm), 
@@ -55,11 +56,11 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
   
   # transpose
   if (d1 == "VS_TEST"){
-    c5 <- c4 %>% gather(statistic, value, -VS_TEST, -PHOUR, -SEQ) %>%
-                 spread(SEQ, value) 
+    c5 <- c4 %>% gather(statistic, value, -VS_TEST, -seq_period, -PHOUR) %>%
+                 spread(key = seq_period, value) 
   } else {
-    c5 <- c4 %>% gather(statistic, value, -EG_TEST, -PHOUR, -SEQ) %>%
-                 spread(SEQ, value)
+    c5 <- c4 %>% gather(statistic, value, -EG_TEST, -seq_period, -PHOUR) %>%
+                 spread(key = seq_period, value)
   }
   
   
@@ -70,7 +71,7 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
   
   c6 <- left_join(c5 %>% arrange(PHOUR), 
                       timepoint %>% arrange(PHOUR),
-                      by = "PHOUR")
+                      by = c("PHOUR"))
   
   result <- round_df(c6, final_digits) %>% arrange_(d1, "DAY", "HOUR") %>% 
     select(-DAY, -HOUR)   # round_df() is included in the useful.R file.
@@ -84,7 +85,6 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
 #' 
 #' @title get the averanges of the replicates for \code{vs} or \code{eg} data.
 #' @param data_clean  an object returned from \code{replicate_clean}
-#' @param included the included data set created by \code{\link{create_included}}
 #' @param digits  should the averages be rounded? Default NO.
 #' @param na_rm  should missing values be excluede? Default \code{TRUE}.
 #' @return the averages
@@ -93,15 +93,11 @@ summary_vs_eg <- function(data_clean, included, inter_digit = NULL, final_digits
 #' eg2 <- replicate_data(eg) # find the triplicates
 #' @seealso \code{\link{replicate_clean}}
 
-replicate_average <- function(data_clean, included, digits = NULL, na_rm = TRUE){
+replicate_average <- function(data_clean, digits = NULL, na_rm = TRUE){
 
   d1 <- guess_test(data_clean, var_identifier = "_TEST")
-  # get the treatment information
-  clean1 <- left_join(data_clean %>% arrange(CLIENTID),         
-                      included %>% arrange(CLIENTID) %>% select(CLIENTID, SEQ, RSEQ), 
-                      by = "CLIENTID")
-  
-  clean2 <- clean1
+
+  clean2 <- data_clean
   
   # average by time points wherever applicable.
   if (d1 == "VS_TEST") { 
@@ -109,14 +105,14 @@ replicate_average <- function(data_clean, included, digits = NULL, na_rm = TRUE)
       mutate(outcome = as.numeric(VS_RES_R))
    
     # average the replicates by position wherever applicable 
-    clean4 <- clean3 %>%  group_by(CLIENTID, VS_TEST, status, PHOUR, SEQ, DAY, HOUR, VS_POS) %>% 
+    clean4 <- clean3 %>%  group_by(CLIENTID, VS_TEST, status, PERIOD, PHOUR, SEQ, DAY, HOUR, VS_POS) %>% 
       summarise(outcome = mean(outcome, na.rm = na_rm))
     
   } else {  # if it's eg data
     clean3 <- clean2 %>% filter(EG_TEST != "OVERALL INTERPRETATION") %>%
       mutate(outcome = as.numeric(EG_ORRES))
     
-    clean4 <- clean3 %>% group_by(CLIENTID, EG_TEST, status, PHOUR, SEQ) %>%
+    clean4 <- clean3 %>% group_by(CLIENTID, EG_TEST, status, PERIOD, PHOUR, SEQ) %>%
       summarise(outcome = mean(outcome, na.rm = na_rm))
   }
   

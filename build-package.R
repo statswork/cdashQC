@@ -7,7 +7,7 @@ check()
 Sys.getenv("PATH")
 Sys.setenv(PATH = "C:/texlive/2016/bin/win32")
 build(manual = T)
-install.packages("~/cdashQC/cdashQC_0.1.3.tar.gz", repos = NULL, type = "source")
+install.packages("~/cdashQC/cdashQC_0.1.4.tar.gz", repos = NULL, type = "source")
 
 
 ## generate the help manual.

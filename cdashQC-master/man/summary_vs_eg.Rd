@@ -4,13 +4,11 @@
 \alias{summary_vs_eg}
 \title{summary statistics}
 \usage{
-summary_vs_eg(data_clean, included, inter_digit = NULL, final_digits = 3,
+summary_vs_eg(data_clean, inter_digit = NULL, final_digits = 3,
   na_rm = TRUE, ischangefrombase = FALSE)
 }
 \arguments{
 \item{data_clean}{the clean data set returned by \code{\link{replicate_clean}}.}
-
-\item{included}{the included data set created by \code{\link{create_included}}}
 
 \item{inter_digit}{if rounding happens for the intermediate averages, what digits should be kept.}
 

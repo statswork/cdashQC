@@ -7,7 +7,7 @@
 guess_reps(data, var_identifier = "_TEST")
 }
 \arguments{
-\item{data}{currently support \code{eg} and \code{vs}}
+\item{data}{data of \code{eg} (created by \code{\link{create_eg}}) or \code{vs} (created by \code{\link{create_vs}})}
 
 \item{var_identifier, }{which columns is the variable for test code names.}
 }
@@ -15,9 +15,10 @@ guess_reps(data, var_identifier = "_TEST")
 a data frame containing number of reps per PERIOD/PHOUR/TESTCODE
 }
 \description{
-guess the number of replicates for each PERIOD/PHOUR/TESTCODE
+guess the number of replicates for each SEQ/PERIOD/PHOUR/TESTCODE
 }
 \examples{
-d1 <- guess_reps(eg)
+eg0 <- create(eg, included)
+d1 <- guess_reps(eg0)
 }
 

@@ -4,10 +4,12 @@
 \alias{create_vs}
 \title{create the vital sign data set.}
 \usage{
-create_vs(vs)
+create_vs(vs, included)
 }
 \arguments{
 \item{vs}{the dataset dm read from sas}
+
+\item{included}{the included data set created by \code{\link{create_included}}}
 }
 \value{
 vs data with necessary variables kept for further summarization.

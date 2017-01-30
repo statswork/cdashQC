@@ -69,10 +69,10 @@ calc_mode <- function(x) {
 
 get_summary_stats <- function(data, group = "EX_TRT_C", var = "race", na.rm =TRUE){
 
-  var_col <- which( names(data)== var)
-  var_attrib <- is.numeric(as.vector(data[, var_col]))
+  col_attrib <- sapply(data, class)
+  var_attrib <- col_attrib[names(col_attrib) == var] == "numeric"
   
-  if(!var_attrib){   # if it's not numerical, treate it as categorical 
+  if(var_attrib==F){   # if it's not numerical, treate it as categorical 
     
     result <- as.data.frame(ftable(data %>% select_(var, group))) %>% 
       spread_(group, "Freq") %>% mutate(trait = toupper(var))

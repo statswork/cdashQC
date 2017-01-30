@@ -4,14 +4,14 @@
 \alias{clean_lab}
 \title{Clean the lab test data set.}
 \usage{
-clean_lab(lab, ex, included)
+clean_lab(lab, included, return_prob = FALSE)
 }
 \arguments{
 \item{lab}{the dataset returned by \code{\link{create_lab}}}
 
-\item{ex}{the ex data set.}
+\item{return_prob}{should the problematic observations be shown? \code{FALSE} by default.}
 
-\item{included}{the included data set.}
+\item{ex}{the ex data set.}
 }
 \value{
 lab data with necessary variables kept for further summarization.

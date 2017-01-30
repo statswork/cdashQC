@@ -4,10 +4,12 @@
 \alias{create_phour}
 \title{Create protocol hour}
 \usage{
-create_phour(data)
+create_phour(data, digit = 2)
 }
 \arguments{
 \item{data}{either \code{eg}, \code{vs} or \code{lb_cq}}
+
+\item{digit}{round the hour by digit, default set to be 2.}
 }
 \value{
 the same data set with one more column if Phour is created, otherwise returns the input data.

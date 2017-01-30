@@ -4,12 +4,10 @@
 \alias{replicate_average}
 \title{get the averanges of the replicates for \code{vs} or \code{eg} data.}
 \usage{
-replicate_average(data_clean, included, digits = NULL, na_rm = TRUE)
+replicate_average(data_clean, digits = NULL, na_rm = TRUE)
 }
 \arguments{
 \item{data_clean}{an object returned from \code{replicate_clean}}
-
-\item{included}{the included data set created by \code{\link{create_included}}}
 
 \item{digits}{should the averages be rounded? Default NO.}
 

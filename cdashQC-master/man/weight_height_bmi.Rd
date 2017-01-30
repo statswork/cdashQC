@@ -4,7 +4,7 @@
 \alias{weight_height_bmi}
 \title{read BMI Weight and Height info from Screening stage.}
 \usage{
-weight_height_bmi(vs)
+weight_height_bmi(vs, period = "SCREEN")
 }
 \arguments{
 \item{vs}{the vs sas data}

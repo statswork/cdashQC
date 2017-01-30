@@ -4,10 +4,12 @@
 \alias{create_eg}
 \title{create variable columns for the ECGs parameters.}
 \usage{
-create_eg(eg)
+create_eg(eg, included)
 }
 \arguments{
 \item{eg}{the dataset eg read from sas}
+
+\item{included}{the included data set created by \code{\link{create_included}}}
 }
 \value{
 eg1 data with necessary variables kept for further summarization.

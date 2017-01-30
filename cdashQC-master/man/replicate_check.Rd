@@ -7,9 +7,9 @@
 replicate_check(data, reps = NULL, printed = TRUE)
 }
 \arguments{
-\item{data}{currently support \code{eg} and \code{vs}}
+\item{data}{data of \code{eg} (created by \code{\link{create_eg}}) or \code{vs} (created by \code{\link{create_vs}})}
 
-\item{reps}{the number of replicates planned. (should be tabled by TESTCODE, PERIOD and PHOUR). If \code{NULL}, \code{guess_reps} will be invoked to guess the number of replicates.}
+\item{reps}{the number of replicates planned. (should be tabled by TESTCODE, SEQ, PERIOD and PHOUR). If \code{NULL}, \code{guess_reps} will be invoked to guess the number of replicates.}
 
 \item{printed}{whether to print the observations having issues at the console.}
 }
@@ -20,7 +20,8 @@ a data frame containing subject and issues at given period and protocol hours
 check data qualities, reporting missing and RECHECKS
 }
 \examples{
-d1 <- replicate_check(eg)
+eg0 <- create_eg(eg, incldued)
+d1 <- replicate_check(eg1)
 }
 \seealso{
 \code{guess_reps}.
