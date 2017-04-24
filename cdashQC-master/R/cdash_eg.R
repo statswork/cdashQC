@@ -26,11 +26,9 @@ create_eg <- function(eg, included){
                       arrange(CLIENTID, SEQ, PHOUR, DAY, HOUR, EG_DAT, EG_TIM)  # sort them 
    
   
-  eg2 <- eg_value %>% mutate(egdate = parse_date_time(paste(ymd(EG_DAT), seconds_to_period(EG_TIM)), "Ymd HMS", truncated= 3),
-                                HOUR = round(HOUR, 2)) %>%  
-                        mutate(EG_TIM = format(egdate, "%H:%M:%S")) %>% 
+  eg2 <- eg_value %>% format_time(date = "EG_DAT", time = "EG_TIM", newname = "egdate") %>%
+                        mutate(HOUR = round(HOUR, 2)) %>%  
                         select(-egdate)
    
     return(eg2)
 }
-

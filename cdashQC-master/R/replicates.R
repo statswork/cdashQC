@@ -179,6 +179,33 @@ replicate_data <- function(data, reps= NULL){
 
 
 
+#' clean the dirty ecgs by looking at the comments. This function finds the ecgs to be removed identified by exact event time.
+#' 
+#' @title remove the unwanted ecgs and return the "good" ones
+#' @param eg_prob the ("dirty") data set from \code{\link{replicate_data}}
+#' @param rm_row A vector specifying the rows to be removed. 
+#' @return the pruned ecg data
+#' @export
+
+eg_rm <- function(eg_prob, rm_row){
+  
+  eg_comment <- eg_prob[rm_row, ] %>% select(CLIENTID, EG_DAT, EG_TIM) %>% 
+                                      unite_("unique_identifier", c("CLIENTID", "EG_DAT", "EG_TIM")) %>%
+                                      distinct()
+                                    
+  eg_all <- eg_prob %>% select(CLIENTID, EG_DAT, EG_TIM) %>% 
+                        unite_("all_record", c("CLIENTID", "EG_DAT", "EG_TIM"))
+  
+  row_to_rm <-  eg_all$all_record %in% eg_comment$unique_identifier
+  
+  eg_remain <- eg_prob[!row_to_rm, ]
+  
+  return(eg_remain)
+  
+}
+
+
+
 ## after checking the data_dirty data, need to decide which rows to be used as replicates
 #' get cleaned replicates 
 #' 
@@ -190,8 +217,8 @@ replicate_data <- function(data, reps= NULL){
 #' @examples
 #' eg2 <- replicate_data(eg) # step 1: find the triplicates
 #' eg_prob <- eg2$data_dirty         # need manual check
-#' # the following rows should be removed
-#' rows_removed <- c(2, 4, 7, 13, 14, 15, 19, 25, 28, 32, 37, 40, 44, 52, 57, 59, 64, 65)
+#' # specifies the rows that should be removed
+#' rows_removed <-  c(8, 31:33, 67, 68, 95, 119, 144, 145, 176, 200, 221, 245, 272, 296)
 #' eg3 <- replicate_clean(eg2, rows_removed)
 #' @seealso \code{\link{replicate_data}}
 
@@ -222,7 +249,7 @@ replicate_clean <- function(data, rm_row = NULL){
       }
     
     else { # if you tell it what rows should be removed.
-      data_keep <- data_dirty[-rm_row, ]
+      data_keep <- eg_rm(eg_prob = data_dirty, rm_row = rm_row)
     }
     
     data_clean_new <- bind_rows(data_clean, data_keep) %>%

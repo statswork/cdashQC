@@ -16,16 +16,15 @@ create_lab <- function(lb_cq, included){
             create_baseline()  
           
   
-  lab2 <- lab1 %>% select(CLIENTID, SEQ, PHOUR, PERIOD, DAY, HOUR, LB_SEX_C, LB_CAT, LB_TEST, 
+  lab2 <- lab1 %>% select(CLIENTID, SEQ, PHOUR, PERIOD, DAY, HOUR, EX_STDAT, EX_STTIM, LB_SEX_C, LB_CAT, LB_TEST, 
                           LB_TESTC, LB_DAT, LB_TIM, LB_ORRES, LB_ORREU, LB_ORLO, LB_ORHI, LB_STNRC, LB_UNSCH,
                           LB_CMTST, LB_NRIND, LB_CSGFG, LB_PISIG, status) %>%
                     mutate( 
                            LB_ORRES = replace(LB_ORRES,trimws(toupper(LB_CMTST)) == "CLOTTED UNABLE TO ANALYZE", "CUTA"), 
-                           LB_ORRES = replace(LB_ORRES,trimws(toupper(LB_CMTST)) == "TOO NUMEROUS TO COUNT", "TNTC"),
-                           labdate = parse_date_time(paste(ymd(LB_DAT), seconds_to_period(LB_TIM)), "Ymd HMS", truncated = 3)
+                           LB_ORRES = replace(LB_ORRES,trimws(toupper(LB_CMTST)) == "TOO NUMEROUS TO COUNT", "TNTC")
                            ) %>%
-                    mutate(LB_TIM = format(labdate, "%H:%M:%S")) %>% 
-                    select(-labdate) %>%
+                    format_time(date = "LB_DAT", time = "LB_TIM", newname = "labdate") %>%
+                    format_time(date = "EX_STDAT", time = "EX_STTIM", newname = "exdate") %>%
                     arrange(CLIENTID, SEQ, PHOUR, PERIOD, DAY, HOUR, LB_CAT, LB_TEST)
 
   id1 <- trimws(toupper(lab2$LB_TESTC)) == "CK-MB"
@@ -53,71 +52,43 @@ create_lab <- function(lb_cq, included){
 #' 
 #' @title Clean the lab test data set.
 #' @param lab  the dataset returned by \code{\link{create_lab}}
-#' @param ex  the ex data set.
-#' @param return_prob  should the problematic observations be shown? \code{FALSE} by default.
+#' @param return_prob  should the problematic observations (e.g, unscheduled, early terminatio, and those supposed to be done predose, but actually done postdose) be shown? \code{FALSE} by default.
 #' @return lab data with necessary variables kept for further summarization. 
 #' @export
-#' @seealso \code{\link{create_lab}} and \code{\link{create_included}}
+#' @seealso \code{\link{create_lab}}
 
 
 # for lab shift, we need to take care of rechecks/unscheduled/..
 
-clean_lab <- function(lab, included, return_prob = FALSE){
+clean_lab <- function(lab, return_prob = FALSE){
   
-  temp1 <- lab
-  # combine all necessary variables
- 
-  med <- included %>% mutate(
-                       exdate = parse_date_time(paste(ymd(EX_STDAT), seconds_to_period(EX_STTIM)), "Ymd HMS", truncated = 3)
-                       ) %>%
-                mutate(EX_STTIM=format(exdate, "%H:%M:%S")) %>%
-                filter( !is.na(EX_STDAT) ) %>%
-                select(CLIENTID, SEQ, PERIOD, EX_TRT, EX_STDAT, EX_STTIM) %>%
-                arrange(CLIENTID, EX_STDAT, EX_STTIM, SEQ, PERIOD) %>% 
-                group_by(CLIENTID, PERIOD) %>%  
-                filter(row_number()==1)  
+  temp1 <- lab %>%  arrange(CLIENTID, SEQ, PERIOD, DAY, HOUR)
   
-  temp3 <- left_join(temp1 %>% arrange(CLIENTID, SEQ, PERIOD), 
-                     med %>% arrange(CLIENTID, SEQ, PERIOD),
-                     by = c("CLIENTID", "SEQ", "PERIOD")) %>%
-            arrange(CLIENTID, SEQ, PERIOD, DAY, HOUR)
+  id0 <- is.na(temp1$exdate)  # does not have ex date, that means it's for screen
   
-  # decide the obs that have problems
-  temp4 <- temp3 %>% filter( !grepl("EARLY TERM", toupper(PERIOD))) %>% # early terminations
-                     # remove the postdose recheck values
-                     filter( !( 
-                                ( LB_DAT > EX_STDAT | (LB_DAT == EX_STDAT & LB_TIM > EX_STTIM) ) # postdose
-                                & trimws(LB_UNSCH) != ""                                         # rechecks
-                              )  # not
-                             ) %>%  
-                     # remove pre-dose recheck having empty values
-                     filter( !(
-                                ( LB_DAT < EX_STDAT | (LB_DAT == EX_STDAT & LB_TIM < EX_STTIM) )     # predose
-                                & (trimws(LB_UNSCH) != "")     # rechecks
-                                & (trimws(LB_ORRES) == "")     # empty
-                              )  # not
-                            )
+  id1 <- !id0 & temp1$labdate < temp1$exdate & temp1$HOUR > 0   # supposed to be postdose, but done predose
+  id2 <- !id0 & temp1$labdate > temp1$exdate & temp1$HOUR < 0   # supposed to be predose, but done postdose
+  prob <- temp1[id1|id2, ]
+  
+  # remove such observations
+  id3 <- grepl("EARLY TERM", toupper(temp1$PERIOD))             # early terminations
+  id4 <- grepl("UNSCH", toupper(temp1$PERIOD)) & !is.na(temp1$HOUR) & temp1$HOUR > 0  # postdose unscheduled events
+  id5 <- trimws(temp1$LB_UNSCH) != "" & !is.na(temp1$HOUR) & temp1$HOUR > 0           # Postdose recheck values
+  id6 <- trimws(temp1$LB_UNSCH) != "" & (is.na(temp1$HOUR) | temp1$HOUR < 0 ) & trimws(temp1$LB_ORRES) == "" # predose empty values
+  
+  rck_unsche <- temp1[id3|id4|id5|id6, ]
 
-  # work from here tomorrow
-  id_base <- !(toupper(trimws(temp4$PERIOD)) %in% c("SCREEN", "SCREENING")) & # not in the screening
-              (temp4$HOUR < 0 | is.na(temp4$HOUR))  &                         # predose hours                                                   
-             ( temp4$LB_DAT > temp4$EX_STDAT | (temp4$LB_DAT == temp4$EX_STDAT & temp4$LB_TIM > temp4$EX_STTIM) )  
-             # LB test is done after dose
-  
-  # remove the na columns generated by observations that have missing EX_STTIM and EX_STDAT
-  baseprob <- temp4[which(id_base == T), ]
-  
-  if(nrow(baseprob) > 0 & !all(is.na(baseprob)) ) warning("Check your BASEPROB data")
-  temp5 <- temp4[which(id_base==F), ]            # the "good" data
   
   # By default, the missing values of LB_NRIND are reset to be "Normal"
-  temp6 <- temp5 %>% mutate(LB_NRIND = replace(LB_NRIND, trimws(LB_NRIND) == "", "N"),
-                            LB_NRIND = replace(LB_NRIND, trimws(LB_NRIND) != "N" & trimws(LB_CAT) == "UA", "H")) # UA has NORMAL and HIGH
+  temp2 <- temp1 %>% filter(!(id1|id2|id3|id4|id5|id6)) %>% 
+                     mutate(LB_NRIND = replace(LB_NRIND, trimws(LB_NRIND) == "", "N"),
+                     LB_NRIND = replace(LB_NRIND, trimws(LB_NRIND) != "N" & trimws(LB_CAT) == "UA", "H")) # UA has NORMAL and HIGH
   if (return_prob){
-    return(baseprob)
+    data_prob <- list(prob = prob, rck_unsche = rck_unsche)
+    return(data_prob)
   }
   else{
-    return(temp6)  
+    return(temp2)  
   }
 }
 
@@ -128,9 +99,9 @@ clean_lab <- function(lab, included, return_prob = FALSE){
 create_lab_baseline <- function(lb_clean){
   
   baselines <- lb_clean %>%  filter(status == "BASELINE") %>%
-                            mutate(bl = trimws(LB_NRIND), baseperiod = PERIOD, baseday = DAY, basehour = HOUR) %>%
-                            select(LB_CAT, LB_TESTC, CLIENTID, baseperiod, baseday, basehour, bl) %>%
-                            arrange(LB_CAT, LB_TESTC, CLIENTID, baseperiod, baseday, basehour)
+                            mutate(bl = trimws(LB_NRIND), baseday = DAY, basehour = HOUR) %>%
+                            select(LB_CAT, LB_TESTC, CLIENTID, SEQ, PERIOD, baseday, basehour, bl) %>%
+                            arrange(LB_CAT, LB_TESTC, CLIENTID, SEQ, PERIOD, baseday, basehour)
                           
   return(baselines)
 }
@@ -174,13 +145,14 @@ create_lab_postdose <- function(lb_clean){
 summary_labshift <- function(lb_clean){
   
   # get baseline
-  baselines <- create_lab_baseline(lb_clean)
+  baselines <- create_lab_baseline(lb_clean) %>% 
+                mutate(PERIOD = replace(PERIOD, grepl("SCREEN", toupper(PERIOD)), "1")) # if SCREEN as baseline, change it to ''1" for merge purpose.
   # get postdose
   postdose <- create_lab_postdose(lb_clean)
   
-  shift1 <- inner_join(postdose %>% arrange(LB_CAT, LB_TESTC, CLIENTID),
-                          baselines %>% arrange(LB_CAT, LB_TESTC, CLIENTID),
-                          by = c("LB_CAT", "LB_TESTC", "CLIENTID")) %>%
+  shift1 <- left_join(postdose %>% arrange(LB_CAT, LB_TESTC, CLIENTID, SEQ, PERIOD),
+                          baselines %>% arrange(LB_CAT, LB_TESTC, CLIENTID, SEQ, PERIOD),
+                          by = c("LB_CAT", "LB_TESTC", "CLIENTID", "SEQ", "PERIOD")) %>%
                    mutate(change = paste(trimws(bl), trimws(LB_NRIND), sep = ""))
   
 
@@ -299,7 +271,7 @@ lab_oor <- function(lab){
                   by = c("LB_CAT", "LB_TESTC", "LB_TEST")) 
   nr <- nr1 %>% ungroup() %>% replace_na(list(range.x = "", range.y = "")) %>%
                 mutate(range = paste(range.x, range.y, sep = " ")) %>%
-                select(LB_CAT, LB_TESTC, range)
+                select(LB_CAT, LB_TESTC, range) %>% distinct()
   
   
   oor <- left_join(lab1 %>% arrange(LB_CAT, LB_TESTC), 

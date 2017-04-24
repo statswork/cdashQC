@@ -69,7 +69,7 @@ ae_assign3 <- function(ae_ex){  # if there's only one treatment
   id4 <- sub_1$ondate >= sub_1$treat_2_sttm & sub_1$ondate < sub_1$treat_3_sttm & sub_1$AE_TERM != "NONE"
   sub_1$ASSIGNED_TRT[id4] <- sub_1$treat_2[id4] 
   
-  id4 <- sub_1$ondate >= sub_1$treat_3_sttm & sub_1$AE_TERM != "NONE"
+  id5 <- sub_1$ondate >= sub_1$treat_3_sttm & sub_1$AE_TERM != "NONE"
   sub_1$ASSIGNED_TRT[id5] <- sub_1$treat_3[id5] 
   
   ae_ex[idx, ] <- sub_1
@@ -79,6 +79,48 @@ ae_assign3 <- function(ae_ex){  # if there's only one treatment
 }
 
 
+
+
+
+ex_start2 <- function(ex){
+  
+  ex1 <- ex %>% format_time(date = "EX_STDAT", time = "EX_STTIM", newname = "treat_st") %>%
+    select(CLIENTID, SEQ, treat_st) 
+  
+  n_trt_tab <- ex1 %>% select(CLIENTID) %>% mutate(ind = TRUE) %>%
+    group_by(CLIENTID) %>% mutate(Freq = cumsum(ind)) %>% 
+    filter(row_number() == n()) %>% 
+    ungroup() %>% select(-ind)
+  
+  n_trt <- max(n_trt_tab$Freq)
+  
+  ex2 <- ex1 %>% mutate(trt0 = T) %>% group_by(CLIENTID) %>% 
+    mutate(trt = cumsum(trt0)) %>% ungroup() %>%
+    select(CLIENTID, trt, treat_st) %>%
+    arrange(CLIENTID,  treat_st, trt) %>%
+    spread(trt, treat_st) 
+  
+  trt <- ex1 %>% mutate(trt0 = T) %>% group_by(CLIENTID) %>% 
+    mutate(trt = cumsum(trt0)) %>% ungroup() %>%  # how to get a running sum
+    select(CLIENTID, trt, SEQ) %>%
+    arrange(CLIENTID, SEQ, trt) %>%
+    spread(trt, SEQ) 
+  
+  ex3 <- left_join(ex2 %>% arrange(CLIENTID), 
+                   trt %>% arrange(CLIENTID), 
+                   by = "CLIENTID")
+  ex4 <- left_join(ex3, n_trt_tab %>% arrange(CLIENTID), 
+                   by = "CLIENTID")            
+  
+  
+  names(ex4)[-1] <-  c(paste("treat", 1:n_trt, "sttm", sep = "_"), 
+                       paste("treat", 1:n_trt, sep = "_"), 
+                       "total_trt")
+  ## decide non-empty columns
+  
+  return(ex4)
+  
+}
 
 
 #' Assign ae to a treatment.
@@ -93,15 +135,15 @@ ae_assign3 <- function(ae_ex){  # if there's only one treatment
 assign_ae_trt <- function(ae, ex){
 
   # pay attention to | (elementwise use of "or") and || (overall evaluation)
-  ae1 <- ae %>% mutate(               
-    AE_TERM = replace(AE_TERM, AE_TERM == "" | AE_YN == "NO", "NONE" ),      
-    ondate= parse_date_time(paste(ymd(AE_STDT), seconds_to_period(AE_STTM)), "Ymd HMS", truncated = 3), 
-    redate= parse_date_time(paste(ymd(AE_ENDT), seconds_to_period(AE_ENTM)), "Ymd HMS", truncated = 3),      # recovery date and time of ae
-    proceduretime1 = parse_date_time(paste(ymd(AE_PDT1), seconds_to_period(AE_PTM1)), "Ymd HMS", truncated=3)
-  ) %>%
-    arrange(CLIENTID)   # sort by ptno
+  ae1 <- ae %>% mutate(AE_TERM = replace(AE_TERM, AE_TERM == "" | AE_YN == "NO", "NONE" )) %>%
+                format_time(date = "AE_STDT", time = "AE_STTM", newname = "ondate") %>%
+                format_time(date = "AE_ENDT", time = "AE_ENTM", newname = "redate") %>%
+                mutate(proceduretime1 = seconds_to_period(redate-ondate)) %>%
+           arrange(CLIENTID)   # sort by ptno
   
-  ex_st <- ex_start(ex)
+  ex_temp <- create_seqtest(ex) %>% mutate(SEQ = paste(SEQ, PERIOD, sep = ""))
+  
+  ex_st <- ex_start2(ex_temp)
   
   ae_ex <- left_join(ae1 %>% arrange(CLIENTID), ex_st %>% arrange(CLIENTID), 
                      by = "CLIENTID") %>% mutate(ASSIGNED_TRT = "")
@@ -135,14 +177,12 @@ assign_ae_trt <- function(ae, ex){
 #' @title do what createaet does.
 #' @param ae  the dataset ae read from sas
 #' @param ex  the dataset ex read from sas
-#' @param included  the dataset included from sas, can be created using \code{create_included()}
-#' @param improv the same argument as the sas macro \code{createaet}
 #' @return aet the data
 #' @export
 #'
 
 
-create_aet <- function(ae, ex, improv = 99){
+create_aet <- function(ae, ex){
   
   final <- assign_ae_trt(ae, ex)
   
@@ -155,16 +195,30 @@ create_aet <- function(ae, ex, improv = 99){
   final$duration = as.period(interval(as.POSIXct(final$ondate), as.POSIXct(final$redate)))
   
 
-  improve <- final %>% filter(AE_OUT==improv)
-  if (nrow(improve) > 0){ # if the improve data is not empty
-     improve <- improve %>%
-        mutate(ondate = parse_date_time(paste(ymd(AE_ENDT), seconds_to_period(AE_ENTM)), "Ymd HMS", truncated = 3)) %>%
-        select(CLIENTID, ondate, AE_TERM)  %>% arrange(CLIENTID, ondate, AE_TERM)
-
-      final <- full_join(final, improve, by = c("CLIENTID", "ondate", "AE_TERM"))
+  remove_col <- rep(FALSE, ncol(final))
+  col_names <- names(final)
+  
+  for (i in 1:ncol(final))  # remove empty columns
+  {
+    
+    cat <- final %>% select_(col_names[i]) %>% distinct()
+    id1 <- id2 <- FALSE
+    if(nrow(cat) == 1){
+      id2 <- as.vector(is.na(cat[1, 1]))
+      if(!id2==TRUE){
+        id1 <- as.vector(cat[1, 1] == "")
+      }
+      ids <- c(id1, id2)
+      if (sum(ids)==1){
+        remove_col[i] <- T
+      }
+    
     }
-
-   return(final)
+   
+  }
+  
+  final1 <- final[, !remove_col]
+   return(final1)
   }
 
 

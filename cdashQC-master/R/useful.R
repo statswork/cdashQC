@@ -183,30 +183,27 @@ round_df <- function(df, digits = 3){
 #' @param data the data which contains the time variables
 #' @param date the date variable
 #' @param time the time (in seconds)
+#' @param newname what should the new variable that concatnates date and time be named?
 #' @return the same data set but \code{time} has been changed to "hh:mm:ss" format.
 #' @export 
 #' 
 #'
 
-format_time <- function(data, date = "AE_STDT", time = "AE_STTM"){
+format_time <- function(data, date = "AE_STDT", time = "AE_STTM", newname = paste(date, time, sep= "_")){
   
   col_id <- which(names(data) %in% c(date, time))
   
-  new_dat <- data[, col_id]  # 
-  row_id <- complete.cases(new_dat)  # which rows are non NA
-  new_sub <- data.frame(new_dat[row_id, ])
-  names(new_sub) <- c("col1", "col2")
+  names(data)[col_id] <- c("col1", "col2")
   
-  # first combine date and time into one variable and then separate them 
-  new_sub2 <- new_sub %>% 
-    mutate(newtime = parse_date_time(paste(ymd(col1), seconds_to_period(col2)), "Ymd HMS", truncated = 3)) %>% 
-    mutate(col2 = format(newtime, "%H:%M:%S")) %>%
-    select(-newtime)
+  dat1 <- data %>% mutate(newtime = as.POSIXct(as.numeric(col2), origin = col1, tz = "GMT")) %>%
+                   mutate(col2 = format(newtime, "%H:%M:%S")) 
   
-  data[row_id, col_id] <- new_sub2
+  names(dat1)[c(col_id, ncol(dat1))] <- c(date, time, newname)  
 
-  return(data)
+  return(dat1)
 }
+
+  
 
 
 

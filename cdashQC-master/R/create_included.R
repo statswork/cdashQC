@@ -172,8 +172,8 @@ create_seq <- function(data, included){
   if (!any(names(data) == "SEQ")) {
   
         
-        trt1 <- included %>% select(CLIENTID, SEQ, PERIOD)
-        trt2 <- included %>% select(CLIENTID, SEQ) %>% distinct() 
+        trt1 <- included %>% select(CLIENTID, SEQ, PERIOD, EX_STDAT, EX_STTIM)
+        trt2 <- included %>% select(CLIENTID, SEQ, PERIOD) %>% distinct() 
         
         pr <- unique(data$PERIOD)
         unusual <- which(!(trimws(toupper(pr)) %in% c("1", "2", "3")))

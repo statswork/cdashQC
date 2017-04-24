@@ -7,7 +7,7 @@ check()
 Sys.getenv("PATH")
 Sys.setenv(PATH = "C:/texlive/2016/bin/win32")
 build(manual = T)
-install.packages("~/cdashQC/cdashQC_0.1.4.tar.gz", repos = NULL, type = "source")
+install.packages("~/cdashQC/cdashQC_0.1.6.tar.gz", repos = NULL, type = "source")
 
 
 ## generate the help manual.
@@ -15,3 +15,6 @@ pack <- "cdashQC"
 path <- find.package(pack)
 # system(paste(shQuote(file.path(R.home("bin"), "R")), "CMD", "Rd2pdf", shQuote(path)))
 system(paste(file.path(R.home("bin"), "R"), "CMD", "Rd2pdf", path))
+
+
+

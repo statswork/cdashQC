@@ -45,7 +45,7 @@ create_seqtest <- function(ex){  # NOTE: THIS FUNCTION IS CALLED IN AE TABLE AS 
 ex_start <- function(ex){
   
   ex1 <- create_seqtest(ex) %>% 
-              mutate(treat_st = parse_date_time(paste(ymd(EX_STDAT), seconds_to_period(EX_STTIM)), "Ymd HMS", truncated = 3)) %>%
+              format_time(date = "EX_STDAT", time = "EX_STTIM", newname = "treat_st") %>%
               select(CLIENTID, SEQ, treat_st) 
             
   n_trt_tab <- ex1 %>% select(CLIENTID) %>% mutate(ind = TRUE) %>%
